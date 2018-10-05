@@ -1,23 +1,32 @@
 /*
-Martin Pihrt www.pihrt.com - zalevac kvetin s frekvencni sondou
-Arduino 1.8.5 
+Martin Pihrt www.pihrt.com 
+zalevac kvetin s frekvencni sondou nebo teplotnim cidlem
+lze nastavit 3 casy zalevani
+lze nastavit interval zalevani 1-7 den
+lze nastavit preruseni cerpadla na urcitou dobu po urcite dobe provozu (cerpadlo bude cyklovat)
+lze nastavit pouzivani cidla vlhkosti nebo teploty a dle toho regulovat
+lze nastavit datum a cas
+lze nastavovat a vypisovat po seriove lince
 
-todo hw  a plneni vody 1257 radek cas plneni udelat nastavovatko
+Vice na www.pihrt.com nebo github
 
+Arduino IDE 1.8.5 
+Deska UNO (Atmega 328)
 
                            Rs, E,DB4,DB5,DB6,DB7
 LCD:                    pin 8, 9,  2,  3,  6,  7
 LCD podsviceni:         pin 10
 Tlacitka IN:            pin 14 (A0 delic 5 tlacitek)
-nepouzito               pin 15 (A1) fotorezistor
 Cidlo vlhka IN:         pin 5 (meri se frekvence ze snimace vlhkosti)
 Serial:                 pin 0, 1
 I2C:                    pin 18 (A4 SDA), 19 (A5 SCL) pouziva DS1307 
 Teplota:                pin 16  DS18B20 ruda +5v, cerna GND, modrá(bila) Data
 Cerpadlo:               pin 17 (pro motor cerpadla)
-nepouzito               pin 4 
-El. ventil privod vody: pin 11 (pro doplneni)
+
+nepouzito:              pin 4 
+nepouzito:              pin 11
 nepouzito:              pin 12 
+nepouzito:              pin 15 
 
 adresa I2C:
 0x68  DS1307 RTC
@@ -32,7 +41,6 @@ char verze[]="FW05.10.18 V1.00"; // Verze programu
 #define cidlo_fMAX  60         // Hz z cidla pri suchu na vzduchu
 
 #define cerpadlo_pin   17      // Cislo pinu pro cerpadlo
-#define ventil_pin     11      // Cislo pinu pro ventil
 #define temp_pin       16      // Cislo pinu cidla teploty
 #define lcd_rs         8       // Cisla pinu pro lcd
 #define lcd_en         9
@@ -70,7 +78,7 @@ float frq;
 OneWire oneWire(temp_pin);
 DallasTemperature sensors(&oneWire);
 float celsius;              // Hodnota teploty v C
-byte vlhkost = 0;           // Hodnota vlhkosti  0-10 na stupnici  
+byte vlhkost = 0;           // Hodnota vlhkosti  0-100 na stupnici  
 
 tmElements_t tm;            // Objekt cas RTC
 
@@ -134,28 +142,6 @@ byte stupen[8] = {             // krouzek pro stupen Celsia
     0b00000,
     0b00000
 };
-byte teplomer[8] =             // Ikona teplomeru
-  {
-    0b00100,
-    0b01010,
-    0b01010,
-    0b01110,
-    0b01110,
-    0b11111,
-    0b11111,
-    0b01110
-};
-byte kapka[8] =                // Ikona vodni kapky
-  {
-    0b00100,
-    0b00100,
-    0b01010,
-    0b01010,
-    0b10001,
-    0b10001,
-    0b10001,
-    0b01110,
-};
 byte sipka_nahoru[8] = {        // ikona sipky smer nahoru
     0b00100,
     0b01110,
@@ -208,7 +194,7 @@ byte use_teplota;
 long last_teplota;
 #define adr_use_vlhkost  16        // pouzivat mereni vlhkosti 1=off, 2=on
 byte use_vlhkost;
-#define adr_last_vlhkost 17        // posledni zmerena vlhkost (namerena hodnota z AD 0-1023)
+#define adr_last_vlhkost 17        // posledni zmerena vlhkost (namerena hodnota 0-100)
 long last_vlhkost;
 
 //**********************************************************************************************
@@ -297,51 +283,19 @@ void setup() {
 } // end setup
 
 void loop() {
-    cti_serial();                // serial_rx_tx (komunikace se serialem)   
-    cti_klavesnici();            // klavesnice (vyhodnocujeme klavesy)
-    if (save) {save_eeprom();}   // ulozi do pameti z lcd menu tlacitek
-    else {
-      regulace_vlhk();             // zpracuje zavlazovani dle vhlkosti
-      regulace_tepl();             // zpracuje zavlažování dle teploty
-      cerpadlo();                  // zpracuj cerpadlo
-      plneni_nadrze();             // zpracuj plneni vody do nadrze
-    }
-    
-  //------------------------------------------
-  // http://www.gammon.com.au/forum/?id=11504
-  /*
-// stop Timer 0 interrupts from throwing the count out
-  byte oldTCCR0A = TCCR0A;
-  byte oldTCCR0B = TCCR0B;
-  TCCR0A = 0;    // stop timer 0
-  TCCR0B = 0;    
-  */
-  startCounting (500);  // how many ms to count for
-  while (!counterReady)
-     {
-      wdt_reset();
-      } 
-  // adjust counts by counting interval to give frequency in Hz
-  frq = (timerCounts *  1000.0) / timerPeriod;
-
-  //Serial.println(F("--"));
-  //Serial.println ((unsigned long) frq);
-  //Serial.println (" Hz.");
- /*
-  // restart timer 0
-  TCCR0A = oldTCCR0A;
-  TCCR0B = oldTCCR0B;
-*/
-  //--------------------------------------------
-  vlhkost = mapuj(frq,cidlo_fMIN,cidlo_fMAX,10,0); // prevod frekvence na vlhkost stupnice vlhka 0-10 s ohledem na min a max frekvenci z cidla
-  if(vlhkost >= 10)  vlhkost = 10;
-  if(vlhkost <= 1)   vlhkost = 0;    
-
-  Alarm.delay(1);              // tik casovace  
+  cti_serial();                // serial_rx_tx (komunikace se serialem)   
+  cti_klavesnici();            // klavesnice (vyhodnocujeme klavesy)
+  if (save) {save_eeprom();}   // ulozi do pameti z lcd menu tlacitek
+  else {
+     Alarm.delay(1);              // tik casovace  
+     regulace_vlhk();             // zpracuje zavlazovani dle vhlkosti
+     regulace_tepl();             // zpracuje zavlažování dle teploty
+     cerpadlo();                  // zpracuj cerpadlo
+  }
+   
   wdt_reset();
 } // end loop
 
-//**********************************************************************************************
 // casovace *************************************************************************************
 void nastav_casovace(){  
    Alarm.alarmRepeat(23,59,50, PeriodaVyp);             // 23:59:50 kazdy den pred pulnoci resetuje periodu
@@ -401,7 +355,6 @@ void PeriodaVyp(){ // resetuje vzdy den 1 az 7 o pulnoci
 } // end void
 
 void PeriodaDen(){ // odpocitava den 1 az 7
-   perioda_posun++;  // 1-7 den
    if (perioda_posun >= 8){
       perioda_posun = 0; // cykl 1-7 den
       PeriodaDen();
@@ -450,6 +403,7 @@ void PeriodaDen(){ // odpocitava den 1 az 7
           }
      break;
    } // end switch  
+   perioda_posun++;  // 1-7 den
 #ifdef DEBUG      
    Serial.println(F("DEN"));
 #endif    
@@ -540,8 +494,7 @@ void init_eeprom(){ // cteni z pameti eeprom a ulozeni defaultu pokud je nova ee
   if (use_teplota > 2 || use_teplota < 1)  {edit = true;write_eeprom_byte(adr_use_teplota, 1);}      // nepouzivat mereni teploty (2=on, 1=off)
   if (last_teplota > 7000 || last_teplota < 0) {edit = true;write_eeprom_long(adr_last_teplota, 0);} // posledni zmerena teplota vychozi 0 C
   if (use_vlhkost > 2 || use_vlhkost < 1)  {edit = true;write_eeprom_byte(adr_use_vlhkost, 1);}      // pouzivat mereni vlhkosti ano(2=on, 1=off)
-  if (last_vlhkost > 10 || last_vlhkost < 0) {edit = true;write_eeprom_long(adr_last_vlhkost, 0);}   // posledni zmerena vlhkost vychozi 0 (0-10)
-  if (pln_nadrz > 360 || pln_nadrz < 5)   {edit = true;write_eeprom_long(adr_pln_nadrz, 60);}        // nastaveno na 60 min max doba plneni nadrze
+  if (last_vlhkost > 100 || last_vlhkost < 0) {edit = true;write_eeprom_long(adr_last_vlhkost, 0);}   // posledni zmerena vlhkost vychozi 0 (0-100)
   if (edit) init_read();  // znovu nacteme ulozene z eeprom pokud se neco menilo   
 } // end init_eeprom  
 
@@ -561,8 +514,7 @@ void init_read(){ // nacteni z eeprom po zapnuti zarizeni
   use_teplota=read_eeprom_byte(adr_use_teplota);               // nacte 1,2 pouzivat mereni teploty 1=off, 2=on  
   last_teplota=read_eeprom_long(adr_last_teplota);             // nacte posledni zmerenou teplotu (hodnota je float x1000) 
   use_vlhkost=read_eeprom_byte(adr_use_vlhkost);               // nacte 1,2 pouzivat mereni vlhkosti 1=off, 2=on
-  last_vlhkost=read_eeprom_long(adr_last_vlhkost);             // nacte posledni zmerenou vlhkost (namerena hodnota z AD 0-1023) 
-  pln_nadrz=read_eeprom_long(adr_pln_nadrz);                   // nacte 5-360 min
+  last_vlhkost=read_eeprom_long(adr_last_vlhkost);             // nacte posledni zmerenou vlhkost (namerena hodnota 0-100) 
 
 #ifdef DEBUG 
   Serial.println(F("INITOK"));
@@ -582,7 +534,6 @@ void ee_read(){ // vypise eeprom hodnoty
    Serial.print(F("PoslT:"));Serial.println(last_teplota);
    Serial.print(F("PouzV:"));Serial.println(use_vlhkost);
    Serial.print(F("PoslV:"));Serial.println(last_vlhkost);
-   Serial.print(F("Ventil:"));Serial.println(pln_nadrz);
 #endif    
 } // end void   
 
@@ -649,7 +600,7 @@ void cti_klavesnici(){ // Rutina cte stiskle klavesy a meni hodnoty parametru
 #ifdef DEBUG     
      Serial.println(F("VPRAVO"));  
 #endif   
-     if (menu_state==13) {LR_menu++; if (LR_menu >= 4) {LR_menu = 4;} lcd_menu(13); btnPUSH = true; break;} // posouvame vpravo v menu lcd cas a datum     
+     if (menu_state==11) {LR_menu++; if (LR_menu >= 4) {LR_menu = 4;} lcd_menu(11); btnPUSH = true; break;} // posouvame vpravo v menu lcd cas a datum     
      if (menu_state==5) {LR_menu++; if (LR_menu >= 1) {LR_menu = 1;} lcd_menu(5); btnPUSH = true; break;} // posouvame vpravo v menu lcd cas 3     
      if (menu_state==3) {LR_menu++; if (LR_menu >= 1) {LR_menu = 1;} lcd_menu(3); btnPUSH = true; break;} // posouvame vpravo v menu lcd cas 2     
      if (menu_state==1) {LR_menu++; if (LR_menu >= 1) {LR_menu = 1;} lcd_menu(1); btnPUSH = true; break;} // posouvame vpravo v menu lcd cas 1        
@@ -661,7 +612,7 @@ void cti_klavesnici(){ // Rutina cte stiskle klavesy a meni hodnoty parametru
 #ifdef DEBUG     
      Serial.println(F("VLEVO"));
 #endif        
-     if (menu_state==13) {LR_menu--; if (LR_menu <= 0) {LR_menu = 0;} lcd_menu(13); btnPUSH = true; break;} // posouvame vlevo v menu lcd cas a datum
+     if (menu_state==11) {LR_menu--; if (LR_menu <= 0) {LR_menu = 0;} lcd_menu(11); btnPUSH = true; break;} // posouvame vlevo v menu lcd cas a datum
      if (menu_state==5) {LR_menu--; if (LR_menu <= 0) {LR_menu = 0;} lcd_menu(5); btnPUSH = true; break;} // posouvame vlevo v menu lcd cas 3     
      if (menu_state==3) {LR_menu--; if (LR_menu <= 0) {LR_menu = 0;} lcd_menu(3); btnPUSH = true; break;} // posouvame vlevo v menu lcd cas 2     
      if (menu_state==1) {LR_menu--; if (LR_menu <= 0) {LR_menu = 0;} lcd_menu(1); btnPUSH = true; break;} // posouvame vlevo v menu lcd cas 1        
@@ -674,18 +625,18 @@ void cti_klavesnici(){ // Rutina cte stiskle klavesy a meni hodnoty parametru
      Serial.println(F("NAHORU"));
 #endif        
      // save
-     if (menu_state==20) {save = true; menu_state = -1; btnPUSHED=0; break;}  // blokujeme vypis na lcd  pouze do konce menu pak vyskocime a ulozime
+     if (menu_state==13) {save = true; menu_state = -1; btnPUSHED=0; break;}  // blokujeme vypis na lcd  pouze do konce menu pak vyskocime a ulozime
      // smazat do default
-     if (menu_state==19) {menu_state = -1;  clear_eeprom(); init_eeprom(); 
+     if (menu_state==12) {menu_state = -1;  clear_eeprom(); init_eeprom(); 
          vterina = 0; minuta = 0; hodina = 12; den = 1; mesic = 1; rok = 18;
          RTC_a_restart(); break;
          }  // blokujeme vypis na lcd  pouze do konce menu pak vyskocime a ulozime
      // datum cas
-     if (menu_state==13) {if (LR_menu == 0) {if (den >= 31) {den = 1;} else {den++;} lcd_menu(13); btnPUSH = true; break;} }          // LR menu 0=den, 1=mesic, 2=rok, 3=hod, 4=min
-     if (menu_state==13) {if (LR_menu == 1) {if (mesic >= 12) {mesic = 1;} else {mesic++;} lcd_menu(13); btnPUSH = true; break;} }    //         1=mesic
-     if (menu_state==13) {if (LR_menu == 2) {if (rok >= 99) {rok = 18;} else {rok++;} lcd_menu(13); btnPUSH = true; break;} }         //         2=rok
-     if (menu_state==13) {if (LR_menu == 3) {if (hodina >= 23) {hodina = 0;} else {hodina++;} lcd_menu(13); btnPUSH = true; break;} } //         3=hodina
-     if (menu_state==13) {if (LR_menu == 4) {if (minuta >= 59) {minuta = 0;} else {minuta++;} lcd_menu(13); btnPUSH = true; break;} } //         4=minuta
+     if (menu_state==11) {if (LR_menu == 0) {if (den >= 31) {den = 1;} else {den++;} lcd_menu(11); btnPUSH = true; break;} }          // LR menu 0=den, 1=mesic, 2=rok, 3=hod, 4=min
+     if (menu_state==11) {if (LR_menu == 1) {if (mesic >= 12) {mesic = 1;} else {mesic++;} lcd_menu(11); btnPUSH = true; break;} }    //         1=mesic
+     if (menu_state==11) {if (LR_menu == 2) {if (rok >= 50) {rok = 18;} else {rok++;} lcd_menu(11); btnPUSH = true; break;} }         //         2=rok
+     if (menu_state==11) {if (LR_menu == 3) {if (hodina >= 23) {hodina = 0;} else {hodina++;} lcd_menu(11); btnPUSH = true; break;} } //         3=hodina
+     if (menu_state==11) {if (LR_menu == 4) {if (minuta >= 59) {minuta = 0;} else {minuta++;} lcd_menu(11); btnPUSH = true; break;} } //         4=minuta
      // use vlhkost
      if (menu_state==10) {if (use_vlhkost == 2) {use_vlhkost = 1;} lcd_menu(10); btnPUSH = true; break;} // true 2 /false 1
      // use teplota
@@ -720,15 +671,15 @@ void cti_klavesnici(){ // Rutina cte stiskle klavesy a meni hodnoty parametru
      Serial.println(F("DOLU"));
 #endif        
      // save
-     if (menu_state==20) {menu = false; save = false; lcd.noBlink(); menu_state = -1; btnPUSHED=0; break;}  // blokujeme vypis na lcd  pouze do konce menu pak vyskocime  
+     if (menu_state==13) {menu = false; save = false; lcd.noBlink(); menu_state = -1; btnPUSHED=0; break;}  // blokujeme vypis na lcd  pouze do konce menu pak vyskocime  
      // smazat do default
-     if (menu_state==19) {menu = false; save = false; lcd.noBlink(); menu_state = -1; btnPUSHED=0; break;}  // blokujeme vypis na lcd  pouze do konce menu pak vyskocime 
+     if (menu_state==12) {menu = false; save = false; lcd.noBlink(); menu_state = -1; btnPUSHED=0; break;}  // blokujeme vypis na lcd  pouze do konce menu pak vyskocime 
      // datum cas
-     if (menu_state==13) {if (LR_menu == 0) {if (den <= 1) {den = 31;} else {den--;} lcd_menu(13); btnPUSH = true; break;} }          // LR menu 0=den, 1=mesic, 2=rok, 3=hod, 4=min
-     if (menu_state==13) {if (LR_menu == 1) {if (mesic <= 1) {mesic = 12;} else {mesic--;} lcd_menu(13); btnPUSH = true; break;} }    //         1=mesic
-     if (menu_state==13) {if (LR_menu == 2) {if (rok <= 18) {rok = 99;} else {rok--;} lcd_menu(13); btnPUSH = true; break;} }         //         2=rok
-     if (menu_state==13) {if (LR_menu == 3) {if (hodina <= 0) {hodina = 23;} else {hodina--;} lcd_menu(13); btnPUSH = true; break;} } //         3=hodina
-     if (menu_state==13) {if (LR_menu == 4) {if (minuta <= 0) {minuta = 59;} else {minuta--;} lcd_menu(13); btnPUSH = true; break;} } //         4=minuta
+     if (menu_state==11) {if (LR_menu == 0) {if (den <= 1) {den = 31;} else {den--;} lcd_menu(11); btnPUSH = true; break;} }          // LR menu 0=den, 1=mesic, 2=rok, 3=hod, 4=min
+     if (menu_state==11) {if (LR_menu == 1) {if (mesic <= 1) {mesic = 12;} else {mesic--;} lcd_menu(11); btnPUSH = true; break;} }    //         1=mesic
+     if (menu_state==11) {if (LR_menu == 2) {if (rok <= 18) {rok = 50;} else {rok--;} lcd_menu(11); btnPUSH = true; break;} }         //         2=rok
+     if (menu_state==11) {if (LR_menu == 3) {if (hodina <= 0) {hodina = 23;} else {hodina--;} lcd_menu(11); btnPUSH = true; break;} } //         3=hodina
+     if (menu_state==11) {if (LR_menu == 4) {if (minuta <= 0) {minuta = 59;} else {minuta--;} lcd_menu(11); btnPUSH = true; break;} } //         4=minuta
      // use vlhkost
      if (menu_state==10) {if (use_vlhkost == 1) {use_vlhkost = 2;} lcd_menu(10); btnPUSH = true; break;} // true 2 /false 1
      // use teplota
@@ -765,7 +716,7 @@ void cti_klavesnici(){ // Rutina cte stiskle klavesy a meni hodnoty parametru
 #endif       
      menu = true;
      lcd_menu(btnPUSHED); // posouvame menu
-     if (btnPUSHED == 1 || btnPUSHED == 3 || btnPUSHED == 5 || btnPUSHED == 13) {LR_menu = 0;  lcd_menu(btnPUSHED); } // vratime se na zacatek tj doleva
+     if (btnPUSHED == 1 || btnPUSHED == 3 || btnPUSHED == 5 || btnPUSHED == 11) {LR_menu = 0;  lcd_menu(btnPUSHED); } // vratime se na zacatek tj doleva
      btnPUSHED++;
      btnPUSH = true;
      break;
@@ -775,12 +726,11 @@ void cti_klavesnici(){ // Rutina cte stiskle klavesy a meni hodnoty parametru
      break;
     
    } // end switch
- } //end void
+} //end void
  
-void lcd_menu(byte krok) // Rutina tiskne texty menu na LCD)
-{ 
+void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
   switch(krok){
-    case 0: // interval spinani pudy
+    case 0: // interval spinani dle dne
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
       lcd.print(F("Interval spinani"));  
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
@@ -852,7 +802,7 @@ void lcd_menu(byte krok) // Rutina tiskne texty menu na LCD)
       menu_state = 6;
       lcd.setCursor(1,1); lcd.blink();
       break;
-    case 7: // preruseni zavlahy kazde
+    case 7: // preruseni zavlahy kazdych xx vterin (cerpadlo cykluje)
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
       lcd.print(F("Preruseni kazde "));
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
@@ -861,7 +811,7 @@ void lcd_menu(byte krok) // Rutina tiskne texty menu na LCD)
       menu_state = 7;
       lcd.setCursor(1,1); lcd.blink();
       break; 
-    case 8: // preruseni zavlahy na dobu
+    case 8: // preruseni zavlahy na dobu xx vterin (cerpadlo cykluje)
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
       lcd.print(F("Preruseni doba "));
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
@@ -876,12 +826,12 @@ void lcd_menu(byte krok) // Rutina tiskne texty menu na LCD)
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       if (use_teplota==2){  
         lcd.print(F("ANO ["));
-        lcd.write((byte) 5); // symbol sipka dolu
+        lcd.write((byte) 1); // symbol sipka dolu
         lcd.print(F("=NE]         "));
         } 
         else {
           lcd.print(F("NE ["));
-          lcd.write((byte) 4); // symbol sipka 
+          lcd.write((byte) 2); // symbol sipka 
           lcd.print(F("=ANO]            "));
           }
       menu_state = 9;
@@ -893,19 +843,18 @@ void lcd_menu(byte krok) // Rutina tiskne texty menu na LCD)
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       if (use_vlhkost==2){  
         lcd.print(F("ANO ["));
-        lcd.write((byte) 5); // symbol sipka dolu
+        lcd.write((byte) 1); // symbol sipka dolu
         lcd.print(F("=NE]         "));
         } 
         else {
           lcd.print(F("NE ["));
-          lcd.write((byte) 4); // symbol sipka 
+          lcd.write((byte) 2); // symbol sipka 
           lcd.print(F("=ANO]            "));
           }
       menu_state = 10;
       lcd.setCursor(0,1); lcd.blink();
       break;
-// todo upravit
-   case 13: // datum cas
+    case 11: // datum cas
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
       lcd.print(F("Nastaveni casu  "));
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
@@ -926,7 +875,7 @@ void lcd_menu(byte krok) // Rutina tiskne texty menu na LCD)
       lcd.write(':');
       print_digits_lcd(minuta);
       lcd.print(F("  ")); 
-      menu_state = 13;
+      menu_state = 11;
       vterina = 0;
       if (LR_menu==0) {lcd.setCursor(1,1); lcd.blink();} // zacne blikat kurzor den
       if (LR_menu==1) {lcd.setCursor(4,1); lcd.blink();} // zacne blikat kurzor mesic
@@ -934,31 +883,31 @@ void lcd_menu(byte krok) // Rutina tiskne texty menu na LCD)
       if (LR_menu==3) {lcd.setCursor(12,1); lcd.blink();} // zacne blikat kurzor hod
       if (LR_menu==4) {lcd.setCursor(15,1); lcd.blink();} // zacne blikat kurzor min
       break; 
-   case 19: // dotaz smazat
+   case 12: // dotaz smazat
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
       lcd.print(F("SMAZAT nastaveni "));
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       lcd.print(F("? [")); 
-      lcd.write((byte) 4); // symbol sipka dolu
+      lcd.write((byte) 1); // symbol sipka dolu
       lcd.print(F("=NE "));
-      lcd.write((byte) 5); // symbol sipka 
+      lcd.write((byte) 2); // symbol sipka 
       lcd.print(F("=ANO]        ")); 
-      menu_state = 19;
+      menu_state = 12;
       lcd.setCursor(0,1); lcd.blink();
       break;           
-   case 20: // dotaz ulozit
+   case 13: // dotaz ulozit
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
       lcd.print(F("ULOZIT nastaveni "));
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       lcd.print(F("? [")); 
-      lcd.write((byte) 4); // symbol sipka dolu
+      lcd.write((byte) 1); // symbol sipka dolu
       lcd.print(F("=NE "));
-      lcd.write((byte) 5); // symbol sipka 
+      lcd.write((byte) 2); // symbol sipka 
       lcd.print(F("=ANO]        ")); 
-      menu_state = 20;
+      menu_state = 13;
       lcd.setCursor(0,1); lcd.blink();
       break;        
-   case 21: // znovu
+   case 14: // znovu
       btnPUSHED = 0;  
       lcd_menu(btnPUSHED);
       break;  
@@ -980,13 +929,11 @@ void vypisuj_info_lcd(){ // informace na lcd
               lcd.print(F("Prave zalevam     "));
               } else { // else 1
                  lcd.setCursor(0,1);
-                 lcd.write((byte) 1); // prvni symbol v pameti lcd - ikona teploty
-                 lcd.print(F(" "));
                  if (celsius > -100){
                     lcd.print(celsius,1);
-                    lcd.print(F(" ["));
+                    //lcd.print(F(" "));
                     lcd.write((byte) 0); // nulty symbol v pameti lcd - krouzek C
-                    lcd.print(F("C]     "));
+                    lcd.print(F("C     "));
                     }//end if
                  else { lcd.print(F("Chyba cidla!    "));}
               }//end else   
@@ -996,23 +943,23 @@ void vypisuj_info_lcd(){ // informace na lcd
            tisk_casu();
            if (blokuj_mereni_vlhka){ // pokud prave bezi cas 1-3
               lcd.setCursor(0,1);
-              lcd.print(F("Prave zalevam      "));
+              lcd.print(F("Prave zalevam...    "));
               } else { // else 1
                 lcd.setCursor(0,1);
-                lcd.write((byte) 2); // druhy symbol v pameti lcd - ikona kapka
-                lcd.print(F(" "));
                 lcd.print(vlhkost);
-                lcd.print(F(" ["));
-                if(frq<1000)  {lcd.print(frq); lcd.print(F("Hz]    "));}
-                if(frq>=1000) {lcd.print(frq/1000); lcd.print(F("kHz]    "));}
+                lcd.print(F("% "));
+                if(frq<1000)  {lcd.print(frq); lcd.print(F("Hz      "));}
+                if(frq>=1000 && frq<10000) {lcd.print(frq/1000); lcd.print(F("kHz      "));}
+                if(frq>=10000 && frq<100000) {lcd.print(frq/10000); lcd.print(F("kHz*10     "));}
+                if(frq>=100000) {lcd.print(frq/100000); lcd.print(F("kHz*100      "));}
                   } 
            break;
          case 2:
          // cerpadlo
             if (cerpadlo_makej){ // kdyz je cerpadlo v provozu
               lcd.setCursor(0,1);
-              lcd.print(F("Cerp "));
-              if (cerpadlo_vystup_stav) {lcd.print(F("VYP "));} else {lcd.print(F("ZAP "));}
+              lcd.print(F("Cerp je "));
+              if (cerpadlo_vystup_stav) {lcd.print(F("VYP na "));} else {lcd.print(F("ZAP na "));}
               long odpocet_cerpadlo = 0;
               odpocet_cerpadlo = ((predchoziCasCerpadlo+interval)-aktualniCasCerpadlo)/1000; // cas v sec
               lcd.print(odpocet_cerpadlo); lcd.print(F(" s       ")); // zobrazi cas v sec
@@ -1020,25 +967,8 @@ void vypisuj_info_lcd(){ // informace na lcd
                       posun_lcd=3;
                       vypisuj_info_lcd();
                       }
-           break;       
+           break;         
          case 3:
-         // info odpocet do startu ventilu
-         tisk_casu();
-           if (ventil_odpocet){ // pokud je aktivni casovac na doplneni nadrze (na konci zalevani)
-              lcd.setCursor(0,1);
-              lcd.print(F("Plnim za ")); 
-              long odpocet_plneni = 0;
-              odpocet_plneni = ((predchoziCasVentil+(pln_nadrz*60000))-aktualniCasVentil)/1000; // cas v sec
-              if (odpocet_plneni >= 60)  {
-                lcd.print(odpocet_plneni/60); lcd.print(F(" min    ")); // zobrazi cas v min
-                } else {
-                   lcd.print(odpocet_plneni); lcd.print(F(" sec     ")); } // zobrazi cas v sec
-              } else {
-                      posun_lcd=4;
-                      vypisuj_info_lcd();
-                     } // end else      
-           break;    
-         case 4:
           // den 1-7
          tisk_casu();
            lcd.setCursor(0,1);
@@ -1061,31 +991,25 @@ void cti_vlhkost(){
 } // end void
 
 
-long mapuj(long x, long in_min, long in_max, long out_min, long out_max) // vraci prevedenou hodnotu tj funkce map
- {
+long mapuj(long x, long in_min, long in_max, long out_min, long out_max){ // vraci prevedenou hodnotu tj funkce map
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
- } // end long
+} // end long
 
 void inicializace(){ // inicializace knihoven
 #ifdef DEBUG 
   Serial.begin(baud_rate);      // Inicializace Serialu
   delay(500);
 #endif  
-  
-  lcd.begin(16, 2);             // Inicializace LCD 16x2 znaku
-  lcd.createChar(0, stupen);    // vytvorime v lcd znak stupne
-  lcd.createChar(1, teplomer);  // vytvorime v lcd ikonu teplomeru
-  lcd.createChar(2, kapka);     // vytvorime v lcd ikonu vlhka
-  lcd.createChar(3, jas);       // vytvorime v lcd ikonu jasu
-  lcd.createChar(4, sipka_dolu);       // vytvorime v lcd ikonu sipky dolu
-  lcd.createChar(5, sipka_nahoru);     // vytvorime v lcd ikonu sipky nahoru
-  lcd.createChar(6, hladina);   // vytvorime v lcd ikonu hladiny
+  lcd.begin(16, 2);                    // Inicializace LCD 16x2 znaku
+  lcd.createChar(0, stupen);           // vytvorime v lcd znak stupne
+  lcd.createChar(1, sipka_dolu);       // vytvorime v lcd ikonu sipky dolu
+  lcd.createChar(2, sipka_nahoru);     // vytvorime v lcd ikonu sipky nahoru
 } // end void
 
 void cti_cas_datum(){
   den = day();
   mesic = month();
-  rok = year()-2000;  // aby bylo cislo 18 - xx misto 2018
+  rok = year()-2000;  // aby bylo cislo roku 18 misto 2018
   hodina = hour();
   minuta = minute();
 } // end void
@@ -1093,8 +1017,6 @@ void cti_cas_datum(){
 void init_piny(){ // nystavy vstupy a vystupy
   pinMode(cerpadlo_pin,OUTPUT);    // Vystup pro cerpadlo 
   digitalWrite(cerpadlo_pin,LOW);  // Vypneme vystup cerpadlo
-  pinMode(ventil_pin,OUTPUT);      // Vystup pro ventil vody 
-  digitalWrite(ventil_pin,LOW);    // Vypneme vystup ventilu
   pinMode(frek_pin,INPUT);         // Vstup pro citac frekvence na T1 cpu atmega
   pinMode(lcd_led,OUTPUT);         // LED LCD vystup
   digitalWrite(lcd_led,HIGH);      // zapneme LED 
@@ -1189,25 +1111,6 @@ void RTC_a_restart(){ // ulozi do rtc a udela restart
    delay(4500); // pockame na watchdog az to sestreli
 } // end void   
 
-void plneni_nadrze(){ // po skonceni zalevani se ceka (v menu "nacerpat vodu" 60-360 min) a pak pokud je voda low sepne ventil do doby voda high
- if (ventil_odpocet){ // pokud skoncilo zalevani spusti se odpocet
-    aktualniCasVentil = millis(); // nacteme aktualni cas v ms
-    
-    if (aktualniCasVentil - predchoziCasVentil >= (pln_nadrz*60000)){ // pokud ubehl cas pro doplneni nadrze *1000 = sec, *60 = min
-       predchoziCasVentil = aktualniCasVentil;
-       ventil_zap = true; // povolime plneni
-       ventil_odpocet = false; // zakazeme casovac     
-       } // end if 
-    } // end if ventil_odpocet 
-
- if (ventil_zap){ // je povoleno plnit nadrz
-      digitalWrite(ventil_pin,HIGH); 
-#ifdef DEBUG        
-       Serial.println(F("VENTIL ZAP"));
-#endif          
-   } // end ventil_zap   
-} // end void
-
 void cerpadlo(){ // rutina spinani cerpadla cas on a cas off
  if (cerpadlo_makej){
    // http://www.baldengineer.com/millis-ind-on-off-times.html
@@ -1235,8 +1138,37 @@ void cerpadlo(){ // rutina spinani cerpadla cas on a cas off
 } // end void  
 
 void regulace_vlhk(){ // reguluje dle vlhkosti
+//------------------------------------------
+  // http://www.gammon.com.au/forum/?id=11504
+  /*
+// stop Timer 0 interrupts from throwing the count out
+  byte oldTCCR0A = TCCR0A;
+  byte oldTCCR0B = TCCR0B;
+  TCCR0A = 0;    // stop timer 0
+  TCCR0B = 0;    
+  */
+  startCounting (500);  // how many ms to count for
+  while (!counterReady){
+    wdt_reset();
+  } 
+  // adjust counts by counting interval to give frequency in Hz
+  frq = (timerCounts *  1000.0) / timerPeriod;
+
+  //Serial.println(F("--"));
+  //Serial.println ((unsigned long) frq);
+  //Serial.println (" Hz.");
+  /*
+  // restart timer 0
+  TCCR0A = oldTCCR0A;
+  TCCR0B = oldTCCR0B;
+  */
+
+  vlhkost = mapuj(frq,cidlo_fMIN,cidlo_fMAX,100,0); // prevod frekvence na vlhkost stupnice vlhka 0-100 s ohledem na min a max frekvenci z cidla
+  if(vlhkost >= 100)  vlhkost = 100;
+  if(vlhkost <1)   vlhkost = 0;    
+  
   if (perioda_je_tu && use_vlhkost==2){ // kdyz je jiz dany x-ty den (toto nastavuje casovac krok 86400 sec) a je povolena vlhkost
-      if (vlhkost < 4){ // zmerena vlhkost je 1,2,3 (na stupnici 0-10)
+      if (vlhkost < 40){ // zmerena vlhkost je 10,20,30 (na stupnici 0-100)
          if (CAS1 || CAS2 || CAS3){     // je prave cas1, cas2, cas3 na casovaci
             blokuj_mereni_vlhka = true; // zakazeme merit vlhkost po dobu zalevani casu1 a na lcd vypisujeme ze bezi cas 1 namisto vlhkosti
             cerpadlo_makej = true;      // povolime cerpadlo    
@@ -1247,8 +1179,6 @@ void regulace_vlhk(){ // reguluje dle vlhkosti
                 CAS2 = false;             // zakazeme cas2
                 CAS3 = false;             // zakazeme cas2
                 cerpadlo_makej = false;   // zakazeme cerpadlo 
-                ventil_odpocet = true;    // povolime plneni nadrze po skonceni zalevani
-                predchoziCasVentil = millis(); // start casovace odpoctu plneni od aktualniho casu
                 write_eeprom_long(adr_last_vlhkost, vlhkost); // ulozime vlhkost do eeprom na konci casu1
                 Serial_ende();
                 blokuj_mereni_vlhka = false; // povolime na lcd mereni vlhkosti a v casovaci mereni vlhka   
@@ -1256,7 +1186,7 @@ void regulace_vlhk(){ // reguluje dle vlhkosti
                 } // end if casovac
             } // end if CAS 1 2 3 - delsi interval
          } // end vlhkost  
-      if (vlhkost >= 4 && vlhkost < 6){ // zmerena vlhkost je 4,5 (na stupnici 0-10)
+      if (vlhkost >= 40 && vlhkost < 60){ // zmerena vlhkost je 40,50 (na stupnici 0-100)
          if (CAS1 || CAS2 || CAS3){     // je prave cas1, cas2, cas3 na casovaci
             blokuj_mereni_vlhka = true; // zakazeme merit vlhkost po dobu zalevani casu1 a na lcd vypisujeme ze bezi cas 1 namisto vlhkosti
             cerpadlo_makej = true;      // povolime cerpadlo    
@@ -1267,8 +1197,6 @@ void regulace_vlhk(){ // reguluje dle vlhkosti
                 CAS2 = false;             // zakazeme cas2
                 CAS3 = false;             // zakazeme cas2
                 cerpadlo_makej = false;   // zakazeme cerpadlo 
-                ventil_odpocet = true;    // povolime plneni nadrze po skonceni zalevani
-                predchoziCasVentil = millis(); // start casovace odpoctu plneni od aktualniho casu
                 write_eeprom_long(adr_last_vlhkost, vlhkost); // ulozime vlhkost do eeprom na konci casu123
                 Serial_ende();
                 blokuj_mereni_vlhka = false; // povolime na lcd mereni vlhkosti a v casovaci mereni vlhka 
@@ -1276,7 +1204,7 @@ void regulace_vlhk(){ // reguluje dle vlhkosti
                 } // end if casovac
             } // end if CAS 1 2 3
          } // end vlhkost  
-      if (vlhkost >= 6 && vlhkost < 8){ // zmerena vlhkost je 6,7 (na stupnici 0-10)
+      if (vlhkost >= 60 && vlhkost < 80){ // zmerena vlhkost je 60,70 (na stupnici 0-100)
          if (CAS1 || CAS2){             // je prave cas1 nebo cas 2 na casovaci
             blokuj_mereni_vlhka = true; // zakazeme merit vlhkost po dobu zalevani casu1 a na lcd vypisujeme ze bezi cas 1 namisto vlhkosti
             cerpadlo_makej = true;      // povolime cerpadlo    
@@ -1286,8 +1214,6 @@ void regulace_vlhk(){ // reguluje dle vlhkosti
                 CAS1 = false;             // zakazeme cas1
                 CAS2 = false;             // zakazeme cas2
                 cerpadlo_makej = false;   // zakazeme cerpadlo 
-                ventil_odpocet = true;    // povolime plneni nadrze po skonceni zalevani
-                predchoziCasVentil = millis(); // start casovace odpoctu plneni od aktualniho casu
                 write_eeprom_long(adr_last_vlhkost, vlhkost); // ulozime vlhkost do eeprom na konci casu12
                 Serial_ende();
                 blokuj_mereni_vlhka = false; // povolime na lcd mereni vlhkosti a v casovaci mereni vlhka  
@@ -1295,7 +1221,7 @@ void regulace_vlhk(){ // reguluje dle vlhkosti
                 } // end if casovac
             } // end if CAS 1 a 2
          } // end vlhkost   
-      if (vlhkost >= 8){                // zmerena vlhkost je > 8 (na stupnici 0-10)
+      if (vlhkost >= 80){                // zmerena vlhkost je > 80 (na stupnici 0-100)
          if (CAS1){                     // je prave cas1 na casovaci
             blokuj_mereni_vlhka = true; // zakazeme merit vlhkost po dobu zalevani casu1 a na lcd vypisujeme ze bezi cas 1 namisto vlhkosti
             cerpadlo_makej = true;      // povolime cerpadlo    
@@ -1304,8 +1230,6 @@ void regulace_vlhk(){ // reguluje dle vlhkosti
                 predchoziCasDoba = aktualniCasDoba;                  
                 CAS1 = false;             // zakazeme cas1
                 cerpadlo_makej = false;   // zakazeme cerpadlo 
-                ventil_odpocet = true;    // povolime plneni nadrze po skonceni zalevani
-                predchoziCasVentil = millis(); // start casovace odpoctu plneni od aktualniho casu
                 write_eeprom_long(adr_last_vlhkost, vlhkost); // ulozime vlhkost do eeprom na konci casu1
                 Serial_ende();
                 blokuj_mereni_vlhka = false; // povolime na lcd mereni vlhkosti a v casovaci mereni vlhka  
@@ -1329,8 +1253,6 @@ void regulace_tepl(){ // reguluje dle teploty
                 CAS2 = false;             // zakazeme cas2
                 CAS3 = false;             // zakazeme cas2
                 cerpadlo_makej = false;   // zakazeme cerpadlo 
-                ventil_odpocet = true;    // povolime plneni nadrze po skonceni zalevani
-                predchoziCasVentil = millis(); // start casovace odpoctu plneni od aktualniho casu
                 write_eeprom_long(adr_last_teplota, int(celsius*1000)); // ulozime teplotu do eeprom na konci casu123 jako pr: 23.57C = 2357 cislo
                 Serial_ende();
                 blokuj_mereni_teploty = false; // povolime na lcd mereni teploty a v casovaci mereni teploty   
@@ -1349,8 +1271,6 @@ void regulace_tepl(){ // reguluje dle teploty
                 CAS2 = false;             // zakazeme cas2
                 CAS3 = false;             // zakazeme cas2
                 cerpadlo_makej = false;   // zakazeme cerpadlo 
-                ventil_odpocet = true;    // povolime plneni nadrze po skonceni zalevani
-                predchoziCasVentil = millis(); // start casovace odpoctu plneni od aktualniho casu
                 write_eeprom_long(adr_last_teplota, int(celsius*1000)); // ulozime teplotu do eeprom na konci casu123 jako pr: 23.57C = 2357 cislo
                 Serial_ende();
                 blokuj_mereni_teploty = false; // povolime na lcd mereni teploty a v casovaci mereni teploty    
@@ -1368,8 +1288,6 @@ void regulace_tepl(){ // reguluje dle teploty
                 CAS1 = false;             // zakazeme cas1
                 CAS2 = false;             // zakazeme cas2
                 cerpadlo_makej = false;   // zakazeme cerpadlo 
-                ventil_odpocet = true;    // povolime plneni nadrze po skonceni zalevani
-                predchoziCasVentil = millis(); // start casovace odpoctu plneni od aktualniho casu
                 write_eeprom_long(adr_last_teplota, int(celsius*1000)); // ulozime teplotu do eeprom na konci casu12 jako pr: 23.57C = 2357 cislo
                 Serial_ende();
                 blokuj_mereni_teploty = false; // povolime na lcd mereni teploty a v casovaci mereni teploty  
@@ -1386,8 +1304,6 @@ void regulace_tepl(){ // reguluje dle teploty
                 predchoziCasDoba = aktualniCasDoba;                  
                 CAS1 = false;             // zakazeme cas1
                 cerpadlo_makej = false;   // zakazeme cerpadlo 
-                ventil_odpocet = true;    // povolime plneni nadrze po skonceni zalevani
-                predchoziCasVentil = millis(); // start casovace odpoctu plneni od aktualniho casu
                 write_eeprom_long(adr_last_teplota, int(celsius*1000)); // ulozime teplotu do eeprom na konci casu1 jako pr: 23.57C = 2357 cislo
                 Serial_ende();
                 blokuj_mereni_teploty = false; // povolime na lcd mereni teploty a v casovaci mereni teploty   
