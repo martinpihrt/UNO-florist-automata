@@ -2,11 +2,24 @@
 Martin Pihrt www.pihrt.com 
 zalevac kvetin s frekvencni sondou nebo teplotnim cidlem
 lze nastavit 3 casy zalevani
-lze nastavit interval zalevani 1-7 den
+lze nastavit den zalevani po-ne
 lze nastavit preruseni cerpadla na urcitou dobu po urcite dobe provozu (cerpadlo bude cyklovat)
 lze nastavit pouzivani cidla vlhkosti nebo teploty a dle toho regulovat
 lze nastavit datum a cas
 lze nastavovat a vypisovat po seriove lince
+
+*** MENU *************
+? Napoveda
+A Spustit program 1
+B Spustit program 2
+C Spustit program 3
+D Nastavit datum a cas
+E Smazat EEPROM
+F Tisk EEPROM
+G Vypsat frekvenci
+H Vypsat teplotu
+I Vypsat datum a cas
+**********************
 
 Vice na www.pihrt.com nebo github
 
@@ -32,7 +45,7 @@ adresa I2C:
 0x68  DS1307 RTC
 */
 
-char verze[]="FW05.10.18 V1.00"; // Verze programu
+char verze[]="13.10.18-V1.00"; // Verze programu
 #define DEBUG                  // 1/0 Povoleni, nebo zakazani ladeni na serialu
 #define baud_rate 115200       // Rychlost serialu nastavit Both NL a CR
 
@@ -73,7 +86,70 @@ char verze[]="FW05.10.18 V1.00"; // Verze programu
   wdt_reset();  
 */
 
+// CZ texty pro LCD
+char prazdno[]         ="                ";   // 16 znaku mezera
+char mezera[]          =" ";                  // 1 znak mezera
+char msg_menu0[]       ="Zavlaha ve dnech";   // menu 0
+char msg_menu1[]       ="Cas programu 1  ";   // menu 1
+char msg_menu2[]       ="Beh programu 1  ";   // menu 2 
+char msg_menu3[]       ="Cas programu 2  ";   // menu 3
+char msg_menu4[]       ="Beh programu 2  ";   // menu 4
+char msg_menu5[]       ="Cas programu 3  ";   // menu 5
+char msg_menu6[]       ="Beh programu 3  ";   // menu 6
+char msg_menu7[]       ="Cerp vypnout za ";   // menu 7
+char msg_menu8[]       ="Cekat vypnuty   ";   // menu 8
+char msg_menu9[]       ="Reguluj teplotou";   // menu 9
+char msg_menu10[]      ="Reguluj vlhkosti";   // menu 10
+char msg_menu11[]      ="Datum a cas     ";   // menu 11
+char msg_menu12[]      ="SMAZAT nastaveni";   // menu 12
+char msg_menu13[]      ="ULOZIT nastaveni";   // menu 13
+char msg_ZAPNUTO[]     ="ZAPNUTO";            // pouzito v menu 9, 10, 12, 13
+char msg_VYPNUTO[]     ="VYPNUTO";            // pouzito v menu 9, 10, 12, 13
+char msg_VYP[]         ="VYP";                // pouzito v menu 9, 10
+char msg_ZAP[]         ="ZAP";                // pouzito v menu 9, 10
+char msg_dvojtecka[]   =":";               // pouzito v menu 1, 3, 5
+char msg_rovnase[]     ="=";
+char msg_procenta[]    ="%";
+char msg_Hz[]          ="Hz";
+char msg_kHz[]         ="kHz";
+char msg_err_cidla[]   ="Chyba cidla";
+char msg_tecka[]       =".";
+char msg_zavL[]        ="[";
+char msg_zavP[]        ="]";
+char msg_otaznik[]     ="?";
+char msg_minus[]       ="-";
+char msg_ANO[]         ="ANO";
+char msg_NE[]          ="NE";
+char msg_po[]          ="Po";
+char msg_ut[]          ="Ut";
+char msg_st[]          ="St";
+char msg_ct[]          ="Ct";
+char msg_pa[]          ="Pa";
+char msg_so[]          ="So";
+char msg_ne[]          ="Ne";
+char msg_dnes[]        ="Dnes je";
+char msg_pondeli[]     ="pondeli";
+char msg_utery[]       ="utery";
+char msg_streda[]      ="streda";
+char msg_ctvrtek[]     ="ctvrtek";
+char msg_patek[]       ="patek";
+char msg_sobota[]      ="sobota";
+char msg_nedele[]      ="nedele";
+char msg_hod_min[]     ="hod:min";
+char msg_sec[]         ="sec";
+char msg_interval_A[]  ="5-250";
+char msg_interval_B[]  ="0-250";
+char msg_ulozeno[]     ="ULOZENO";
+char msg_rbt[]         ="RESTARTUJI SE";
+char msg_run_now[]     ="BEZI PROGRAM...";
+char msg_rtc[]         ="RTC neni nenastaven!";
+char msg_cerpadlo[]    ="CERPADLO";
+char msg_vloz[]        ="Vloz";
+char msg_doba[]        ="doba";
+
 float frq;
+long odpocet_cerpadlo = 0;
+byte get_day;
 
 OneWire oneWire(temp_pin);
 DallasTemperature sensors(&oneWire);
@@ -92,8 +168,6 @@ unsigned long interval = 0;                // Pomocna pro casovac
 boolean cerpadlo_vystup_stav = true;       // Pomocna pro vystup cerpadla
 
 // regulace zalevani dle casu, vlhkosti a teploty 
-byte perioda_posun = 0;                    // Promena posun periody kazdy den +1 (1-7)
-boolean perioda_je_tu = true;              // Pomocna urcuje ze je jiz x-ty den (menu "interval spinani" 1-7) po zapnuti napajeni je true
 boolean CAS1 = false;                      // Hodi se true v nastaveny cas 1
 boolean CAS2 = false;                      // Hodi se true v nastaveny cas 2
 boolean CAS3 = false;                      // Hodi se true v nastaveny cas 3
@@ -126,9 +200,9 @@ int posun_lcd = 0;                 // Pomocna posun info na lcd
 int vterina = 0;
 int minuta = 0;
 int hodina = 0;
-int den = 0;
-int mesic = 0;
-int rok = 0;
+int den = 1;
+int mesic = 1;
+int rok = 18;
 
 // symboly na lcd
 // http://mikeyancey.com/hamcalc/lcd_characters.php
@@ -164,8 +238,6 @@ byte sipka_dolu[8] = {          // ikona sipky smer dolu
 };
 
 // definice adresy eeprom a promenych z eeprom
-#define adr_perioda_den  1         // perioda 1-7 den
-byte perioda_den;
 #define adr_cas1_hod     2         // cas1 0-23 hod
 byte cas1_hod;
 #define adr_cas1_min     3         // cas1 0-59 min (max 23:30) krok 30 min
@@ -196,6 +268,20 @@ long last_teplota;
 byte use_vlhkost;
 #define adr_last_vlhkost 17        // posledni zmerena vlhkost (namerena hodnota 0-100)
 long last_vlhkost;
+#define adr_day_po       20
+#define adr_day_ut       21
+#define adr_day_st       22
+#define adr_day_ct       23
+#define adr_day_pa       24
+#define adr_day_so       25
+#define adr_day_ne       26
+byte day_po = 2;
+byte day_ut = 2;
+byte day_st = 2;
+byte day_ct = 2;
+byte day_pa = 2;
+byte day_so = 2;
+byte day_ne = 2;
 
 //**********************************************************************************************
 // citac frekvence na D5 ********************************************************************************
@@ -275,9 +361,10 @@ void setup() {
     firmware();         // pomocne funkce (ini serial a lcd, fw na serial a lcd)
     cti_serial();       // serial_rx_tx (komunikace se serialem)   
     nacti_RTC();        // pomocne funkce (nacteni RTC a tisk na serial a lcd)
-    serial_clock_display(); // tisk casu na serial
     init_teplota();     // pomocne funkce cidlo DS18B20
-    nastav_casovace();  // casovac (nastavi casovace) 
+    CasovacMereni();    // nacte teplotu
+    nastav_casovace();  // casovac (nastavi casovace)
+    delay(2000); 
     wdt_enable(WDTO_4S);
     wdt_reset();    
 } // end setup
@@ -288,126 +375,23 @@ void loop() {
   if (save) {save_eeprom();}   // ulozi do pameti z lcd menu tlacitek
   else {
      Alarm.delay(1);              // tik casovace  
-     regulace_vlhk();             // zpracuje zavlazovani dle vhlkosti
-     regulace_tepl();             // zpracuje zavlažování dle teploty
-     cerpadlo();                  // zpracuj cerpadlo
-  }
-   
+     if(menu==false){
+        regulace_vlhk();             // zpracuje zavlazovani dle vhlkosti
+        regulace_tepl();             // zpracuje zavlažování dle teploty
+        cerpadlo();                  // zpracuj cerpadlo
+     }   
+  }  
   wdt_reset();
 } // end loop
 
 // casovace *************************************************************************************
 void nastav_casovace(){  
-   Alarm.alarmRepeat(23,59,50, PeriodaVyp);             // 23:59:50 kazdy den pred pulnoci resetuje periodu
-   Alarm.alarmRepeat(0,0,3, PeriodaDen);                // 00:00:03 kazdy den po pulnoci pricita periodu (den) 1-7 
-   Alarm.timerRepeat(2, CasovacSec);                    // prepni text na LCD po 2 sec a mer cidla
+   Alarm.timerRepeat(3, CasovacSec);                    // prepni text na LCD po xx sec
+   Alarm.timerRepeat(5, CasovacMereni);                 // zmer teplotu po xx sec
    Alarm.alarmRepeat(cas1_hod,cas1_min,0, ZavlahaCasa); // h:m cas zavlazovani 1 
    Alarm.alarmRepeat(cas2_hod,cas2_min,0, ZavlahaCasb); // h:m cas zavlazovani 2 
    Alarm.alarmRepeat(cas3_hod,cas3_min,0, ZavlahaCasc); // h:m cas zavlazovani 3 
 } //end void
-
-void PeriodaVyp(){ // resetuje vzdy den 1 az 7 o pulnoci
-   perioda_je_tu = false; // skoncil den nulujeme priznak perioda
-   CAS1 = false;             // zakazeme cas1
-   CAS2 = false;             // zakazeme cas2
-   CAS3 = false;             // zakazeme cas2
-   cerpadlo_makej = false;   // zakazeme cerpadlo
-   blokuj_mereni_teploty = false;
-   blokuj_mereni_vlhka = false;
-   Serial_ende();
-   switch(perioda_posun){ // na konci dne resetuje den (kdyz je napriklad den 3 tak ho vynuluje, ale az nakonci)
-     case 1:
-        if (perioda_den == 1) { // kdyz je v menu nstavena peri 1 den
-          perioda_posun = 0;
-          }
-     break;
-     case 2:
-        if (perioda_den == 2) {
-          perioda_posun = 0;
-          }
-     break;
-     case 3:
-        if (perioda_den == 3) {
-          perioda_posun = 0;
-          }
-     break;
-     case 4:
-        if (perioda_den == 4) {
-          perioda_posun = 0;
-          }
-     break;
-     case 5:
-        if (perioda_den == 5) {
-          perioda_posun = 0;
-          }
-     break;
-     case 6:
-        if (perioda_den == 6) {
-          perioda_posun = 0;
-          }
-     break;
-     case 7:
-        if (perioda_den == 7) {
-          perioda_posun = 0;
-          }
-     break;
-   } // end switch  
-} // end void
-
-void PeriodaDen(){ // odpocitava den 1 az 7
-   if (perioda_posun >= 8){
-      perioda_posun = 0; // cykl 1-7 den
-      PeriodaDen();
-      } 
-   switch(perioda_posun){
-     case 1:
-        if (perioda_den == 1) { // kdyz je v menu nstavena peri 1 den
-          perioda_je_tu = true; // zacal 1 den
-          perioda_posun = 0;
-          }
-     break;
-     case 2:
-        if (perioda_den == 2) {
-          perioda_je_tu = true; // zacal 2 den
-          perioda_posun = 0;
-          }
-     break;
-     case 3:
-        if (perioda_den == 3) {
-          perioda_je_tu = true; // zacal 3 den
-          perioda_posun = 0;
-          }
-     break;
-     case 4:
-        if (perioda_den == 4) {
-          perioda_je_tu = true; // zacal 4 den
-          perioda_posun = 0;
-          }
-     break;
-     case 5:
-        if (perioda_den == 5) {
-          perioda_je_tu = true; // zacal 5 den
-          perioda_posun = 0;
-          }
-     break;
-     case 6:
-        if (perioda_den == 6) {
-          perioda_je_tu = true; // zacal 6 den
-          perioda_posun = 0;
-          }
-     break;
-     case 7:
-        if (perioda_den == 7) {
-          perioda_je_tu = true; // zacal 7 den
-          perioda_posun = 0;
-          }
-     break;
-   } // end switch  
-   perioda_posun++;  // 1-7 den
-#ifdef DEBUG      
-   Serial.println(F("DEN"));
-#endif    
-} // end void
 
 void ZavlahaCasa(){ //
 #ifdef DEBUG
@@ -442,14 +426,42 @@ void ZavlahaCasc(){ //
    trvani_doby = doba3*1000;
 } // end void
 
-void CasovacSec(){ // posouva text na lcd a meri z cidel po 1 sec  
-   if (menu==false){ 
-     cti_teplotu();   // ds18b20
-     cti_vlhkost();   // vstup frekvence na serial   
-     posun_lcd++;
-     vypisuj_info_lcd();
-   }
+void CasovacSec(){ // posouva text na lcd a meri z cidel po xx sec  
+  if (menu==false){  
+    posun_lcd++;
+    vypisuj_info_lcd();
+  }
 } // end void 
+
+void CasovacMereni(){ // meri teplotu po xx sec
+  if (menu==false){ 
+    cti_teplotu();   // ds18b20  
+    cti_frekvenci(); 
+  }
+} // end void 
+
+void cti_frekvenci(){
+  //------------------------------------------
+  // http://www.gammon.com.au/forum/?id=11504
+  /*
+// stop Timer 0 interrupts from throwing the count out
+  byte oldTCCR0A = TCCR0A;
+  byte oldTCCR0B = TCCR0B;
+  TCCR0A = 0;    // stop timer 0
+  TCCR0B = 0;    
+  */
+  startCounting (500);  // how many ms to count for
+  while (!counterReady){
+    wdt_reset();
+  } 
+  // adjust counts by counting interval to give frequency in Hz
+  frq = (timerCounts * 1000.0) / timerPeriod;
+  /*
+  // restart timer 0
+  TCCR0A = oldTCCR0A;
+  TCCR0B = oldTCCR0B;
+  */
+} // end void
 
 //**********************************************************************************************
 // eeprom pamet ********************************************************************************
@@ -479,7 +491,6 @@ void init_eeprom(){ // cteni z pameti eeprom a ulozeni defaultu pokud je nova ee
   init_read(); // nacteme z eeprom hodnoty 
   boolean edit = false;
   // pokud jsou mimo rozsah upravime a ulozime jako default
-  if (perioda_den > 7 || perioda_den < 1)  {edit = true;write_eeprom_byte(adr_perioda_den, 1);}      // nastaveno na 1 den opakovani
   if (cas1_hod > 23 || cas1_hod < 0)       {edit = true;write_eeprom_byte(adr_cas1_hod, 6);}         // nastaveno na 6 hod (>6:00)
   if (cas1_min > 59 || cas1_min < 0)       {edit = true;write_eeprom_byte(adr_cas1_min, 0);}         // nastaveno na 0 min (6:>00)
   if (doba1 > 250 || doba1 < 5)            {edit = true;write_eeprom_byte(adr_doba1, 30);}           // nastaveno na 30 sec doba zalevani
@@ -495,11 +506,17 @@ void init_eeprom(){ // cteni z pameti eeprom a ulozeni defaultu pokud je nova ee
   if (last_teplota > 7000 || last_teplota < 0) {edit = true;write_eeprom_long(adr_last_teplota, 0);} // posledni zmerena teplota vychozi 0 C
   if (use_vlhkost > 2 || use_vlhkost < 1)  {edit = true;write_eeprom_byte(adr_use_vlhkost, 1);}      // pouzivat mereni vlhkosti ano(2=on, 1=off)
   if (last_vlhkost > 100 || last_vlhkost < 0) {edit = true;write_eeprom_long(adr_last_vlhkost, 0);}   // posledni zmerena vlhkost vychozi 0 (0-100)
+  if (day_po > 2 || day_po==1) {edit = true;write_eeprom_byte(adr_day_po, 2);}
+  if (day_ut > 2 || day_ut==1) {edit = true;write_eeprom_byte(adr_day_ut, 2);}
+  if (day_st > 2 || day_st==1) {edit = true;write_eeprom_byte(adr_day_st, 2);}
+  if (day_ct > 2 || day_ct==1) {edit = true;write_eeprom_byte(adr_day_ct, 2);}
+  if (day_pa > 2 || day_pa==1) {edit = true;write_eeprom_byte(adr_day_pa, 2);}
+  if (day_so > 2 || day_so==1) {edit = true;write_eeprom_byte(adr_day_so, 2);}
+  if (day_ne > 2 || day_ne==1) {edit = true;write_eeprom_byte(adr_day_ne, 2);}
   if (edit) init_read();  // znovu nacteme ulozene z eeprom pokud se neco menilo   
 } // end init_eeprom  
 
 void init_read(){ // nacteni z eeprom po zapnuti zarizeni
-  perioda_den=read_eeprom_byte(adr_perioda_den);            // nacte se 1-7 z eeprom 
   cas1_hod=read_eeprom_byte(adr_cas1_hod);                  // nacte se cas1 0-23 hod   
   cas1_min=read_eeprom_byte(adr_cas1_min);                  // nacte se cas1 0-59 min
   doba1=read_eeprom_byte(adr_doba1);                        // nacte se doba1 5-250 sec 
@@ -515,25 +532,37 @@ void init_read(){ // nacteni z eeprom po zapnuti zarizeni
   last_teplota=read_eeprom_long(adr_last_teplota);             // nacte posledni zmerenou teplotu (hodnota je float x1000) 
   use_vlhkost=read_eeprom_byte(adr_use_vlhkost);               // nacte 1,2 pouzivat mereni vlhkosti 1=off, 2=on
   last_vlhkost=read_eeprom_long(adr_last_vlhkost);             // nacte posledni zmerenou vlhkost (namerena hodnota 0-100) 
-
+  day_po = read_eeprom_byte(adr_day_po);
+  day_ut = read_eeprom_byte(adr_day_ut);
+  day_st = read_eeprom_byte(adr_day_st);
+  day_ct = read_eeprom_byte(adr_day_ct);
+  day_pa = read_eeprom_byte(adr_day_pa);
+  day_so = read_eeprom_byte(adr_day_so);
+  day_ne = read_eeprom_byte(adr_day_ne);
 #ifdef DEBUG 
-  Serial.println(F("INITOK"));
+  Serial.println(F("EEPROM nacteni OK"));
 #endif   
 } // end init_read  
 
 void ee_read(){ // vypise eeprom hodnoty
    init_read(); // nacte ee
 #ifdef DEBUG
-   Serial.print(F("Perioda:"));Serial.println(perioda_den);
    Serial.print(F("Cas1:"));Serial.print(cas1_hod);Serial.print(cas1_min);Serial.println(doba1);
    Serial.print(F("Cas2:"));Serial.print(cas2_hod);Serial.print(cas2_min);Serial.println(doba2);
    Serial.print(F("Cas3:"));Serial.print(cas3_hod);Serial.print(cas3_min);Serial.println(doba3);
    Serial.print(F("CerpZAP:"));Serial.println(cerpadlo_on);
    Serial.print(F("CerpVYP:"));Serial.println(pauza_cerpadlo_off);
-   Serial.print(F("PouzT:"));Serial.println(use_teplota);
-   Serial.print(F("PoslT:"));Serial.println(last_teplota);
-   Serial.print(F("PouzV:"));Serial.println(use_vlhkost);
-   Serial.print(F("PoslV:"));Serial.println(last_vlhkost);
+   Serial.print(F("RegulTeplotou:"));Serial.println(use_teplota);
+   Serial.print(F("PosledniT:"));Serial.println(last_teplota);
+   Serial.print(F("RegulVlhkosti:"));Serial.println(use_vlhkost);
+   Serial.print(F("PosledniV:"));Serial.println(last_vlhkost);
+   Serial.print(F("PO:"));Serial.println(day_po);
+   Serial.print(F("UT:"));Serial.println(day_ut);
+   Serial.print(F("ST:"));Serial.println(day_st);
+   Serial.print(F("CT:"));Serial.println(day_ct);
+   Serial.print(F("PA:"));Serial.println(day_pa);
+   Serial.print(F("SO:"));Serial.println(day_so);
+   Serial.print(F("NE:"));Serial.println(day_ne);
 #endif    
 } // end void   
 
@@ -542,12 +571,11 @@ void clear_eeprom(){ // write 0 do vsech bytes EEPROM
       EEPROM.write(i, 0);  
       }
 #ifdef DEBUG      
-    Serial.println(F("CLREE"));  
+    Serial.println(F("EEPROM smazana"));  
 #endif     
 } // end void    
 
 void save_eeprom() { // ulozi z lcd menu hodnoty
-  write_eeprom_byte(adr_perioda_den, perioda_den);
   write_eeprom_byte(adr_cas1_hod, cas1_hod);
   write_eeprom_byte(adr_cas1_min, cas1_min);
   write_eeprom_byte(adr_doba1, doba1);
@@ -561,16 +589,23 @@ void save_eeprom() { // ulozi z lcd menu hodnoty
   write_eeprom_byte(adr_pauza_cerpadlo_off, pauza_cerpadlo_off);
   write_eeprom_byte(adr_use_teplota, use_teplota);
   write_eeprom_byte(adr_use_vlhkost, use_vlhkost);
+  write_eeprom_byte(adr_day_po, day_po);
+  write_eeprom_byte(adr_day_ut, day_ut);
+  write_eeprom_byte(adr_day_st, day_st);
+  write_eeprom_byte(adr_day_ct, day_ct);
+  write_eeprom_byte(adr_day_pa, day_pa);
+  write_eeprom_byte(adr_day_so, day_so);
+  write_eeprom_byte(adr_day_ne, day_ne);
 #ifdef DEBUG
-  Serial.println(F("SAVE"));
+  Serial.println(msg_ulozeno);
 #endif     
-
   save = false;
   lcd.noBlink(); // prestaneme blikat kurzorem
   lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-  lcd.print(F("Ulozeno...        "));  
+  lcd.print(msg_ulozeno); 
+  lcd.print(prazdno); 
   lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
-  lcd.print(F("                  "));  
+  lcd.print(prazdno);  
   delay(2000); // pockame na lcd text
   RTC_a_restart(); // pomocne funkce
 } // end void  
@@ -579,48 +614,52 @@ void save_eeprom() { // ulozi z lcd menu hodnoty
 // klavesnice na analogovam vstupu *************************************************************
 int read_LCD_buttons(){ // tato funkce cte hodnotu tlacitek
     adc_key_in = analogRead(button_pin);      // cteme hodnotu ze senzoru A0
+    //Serial.print("adc:"); Serial.print(adc_key_in);Serial.print(" ");
     // stredni hodnota tlacitek je zhruba tato: 0, 144, 329, 504, 741
     // pridame cca 50 k temto hodnotam a zkontrolujeme zda jsme blizko
-    if (adc_key_in > 1000) return btnNONE; // kontrolujeme nejprve tuto moznost, protoze to je nejcastejsi stav
-    if (adc_key_in < 50)   return btnRIGHT;  
-    if (adc_key_in < 195)  return btnUP;
-    if (adc_key_in < 380)  return btnDOWN;
-    if (adc_key_in < 555)  return btnLEFT;
-    if (adc_key_in < 790)  return btnSELECT;  
-    delay(1);
+    if (adc_key_in<50)   return btnRIGHT;  
+    if (adc_key_in<195)  return btnUP;
+    if (adc_key_in<380)  return btnDOWN;
+    if (adc_key_in<555)  return btnLEFT;
+    if (adc_key_in<790)  return btnSELECT;  
+    if (adc_key_in>1000) return btnNONE; // kontrolujeme nejprve tuto moznost, protoze to je nejcastejsi stav
     return btnNONE;  // pokud nic z toho neodpovida, vracime tuto hodnotu
 } //end read
 
 void cti_klavesnici(){ // Rutina cte stiskle klavesy a meni hodnoty parametru
   lcd_key = read_LCD_buttons();  // precteme stav tlacitek   
-  switch (lcd_key){               // dle toho, ktere je stisknuto vypiseme akci
-   
-   case btnRIGHT: // vpravo               
-     if(btnPUSH) break; 
+  switch (lcd_key){              // dle toho, ktere je stisknuto vypiseme akci  
+    case btnRIGHT: // vpravo               
+     //if(btnPUSH) break; 
+     delay(400);
 #ifdef DEBUG     
      Serial.println(F("VPRAVO"));  
 #endif   
      if (menu_state==11) {LR_menu++; if (LR_menu >= 4) {LR_menu = 4;} lcd_menu(11); btnPUSH = true; break;} // posouvame vpravo v menu lcd cas a datum     
-     if (menu_state==5) {LR_menu++; if (LR_menu >= 1) {LR_menu = 1;} lcd_menu(5); btnPUSH = true; break;} // posouvame vpravo v menu lcd cas 3     
-     if (menu_state==3) {LR_menu++; if (LR_menu >= 1) {LR_menu = 1;} lcd_menu(3); btnPUSH = true; break;} // posouvame vpravo v menu lcd cas 2     
-     if (menu_state==1) {LR_menu++; if (LR_menu >= 1) {LR_menu = 1;} lcd_menu(1); btnPUSH = true; break;} // posouvame vpravo v menu lcd cas 1        
+     if (menu_state==5)  {LR_menu++; if (LR_menu >= 1) {LR_menu = 1;} lcd_menu(5); btnPUSH = true; break;} // posouvame vpravo v menu lcd cas 3     
+     if (menu_state==3)  {LR_menu++; if (LR_menu >= 1) {LR_menu = 1;} lcd_menu(3); btnPUSH = true; break;} // posouvame vpravo v menu lcd cas 2     
+     if (menu_state==1)  {LR_menu++; if (LR_menu >= 1) {LR_menu = 1;} lcd_menu(1); btnPUSH = true; break;} // posouvame vpravo v menu lcd cas 1        
+     if (menu_state==0)  {LR_menu++; if (LR_menu >= 6) {LR_menu = 6;} lcd_menu(0); btnPUSH = true; break;} // posouvame vlevo v menu lcd den        
      btnPUSH = true;                              
      break;
      
    case btnLEFT: // vlevo
-     if(btnPUSH) break;
+     delay(400);
+     //if(btnPUSH) break;
 #ifdef DEBUG     
      Serial.println(F("VLEVO"));
 #endif        
      if (menu_state==11) {LR_menu--; if (LR_menu <= 0) {LR_menu = 0;} lcd_menu(11); btnPUSH = true; break;} // posouvame vlevo v menu lcd cas a datum
-     if (menu_state==5) {LR_menu--; if (LR_menu <= 0) {LR_menu = 0;} lcd_menu(5); btnPUSH = true; break;} // posouvame vlevo v menu lcd cas 3     
-     if (menu_state==3) {LR_menu--; if (LR_menu <= 0) {LR_menu = 0;} lcd_menu(3); btnPUSH = true; break;} // posouvame vlevo v menu lcd cas 2     
-     if (menu_state==1) {LR_menu--; if (LR_menu <= 0) {LR_menu = 0;} lcd_menu(1); btnPUSH = true; break;} // posouvame vlevo v menu lcd cas 1        
-     btnPUSH = true;
+     if (menu_state==5)  {LR_menu--; if (LR_menu <= 0) {LR_menu = 0;} lcd_menu(5); btnPUSH = true; break;} // posouvame vlevo v menu lcd cas 3     
+     if (menu_state==3)  {LR_menu--; if (LR_menu <= 0) {LR_menu = 0;} lcd_menu(3); btnPUSH = true; break;} // posouvame vlevo v menu lcd cas 2     
+     if (menu_state==1)  {LR_menu--; if (LR_menu <= 0) {LR_menu = 0;} lcd_menu(1); btnPUSH = true; break;} // posouvame vlevo v menu lcd cas 1        
+     if (menu_state==0)  {LR_menu--; if (LR_menu <= 0) {LR_menu = 0;} lcd_menu(0); btnPUSH = true; break;} // posouvame vlevo v menu lcd den        
+     //btnPUSH = true;
      break;
      
    case btnUP: // nahoru
-     if(btnPUSH) break;
+     delay(200);
+     //if(btnPUSH) break;
 #ifdef DEBUG     
      Serial.println(F("NAHORU"));
 #endif        
@@ -628,7 +667,7 @@ void cti_klavesnici(){ // Rutina cte stiskle klavesy a meni hodnoty parametru
      if (menu_state==13) {save = true; menu_state = -1; btnPUSHED=0; break;}  // blokujeme vypis na lcd  pouze do konce menu pak vyskocime a ulozime
      // smazat do default
      if (menu_state==12) {menu_state = -1;  clear_eeprom(); init_eeprom(); 
-         vterina = 0; minuta = 0; hodina = 12; den = 1; mesic = 1; rok = 18;
+         vterina = 0; minuta = 0; hodina = 0; den = 1; mesic = 1; rok = 18;
          RTC_a_restart(); break;
          }  // blokujeme vypis na lcd  pouze do konce menu pak vyskocime a ulozime
      // datum cas
@@ -660,13 +699,19 @@ void cti_klavesnici(){ // Rutina cte stiskle klavesy a meni hodnoty parametru
      // cas spinani 1
      if (menu_state==1) {if (LR_menu == 0) {if (cas1_hod >= 23) {cas1_hod = 0;} else {cas1_hod++;} lcd_menu(1); btnPUSH = true; break;} }          // LR menu 0=hod,
      if (menu_state==1) {if (LR_menu == 1) {if (cas1_min >= 59) {cas1_min = 0;} else {cas1_min++;} lcd_menu(1); btnPUSH = true; break;} }          // LR menu 0=min,
-     // perioda dnu 1-7
-     if (menu_state==0) {if (perioda_den >= 7) {perioda_den = 1;} else {perioda_den++;} lcd_menu(0); btnPUSH = true; break;} // krok 1 den
-     btnPUSH = true;
+     // dny po-ne
+     if (menu_state==0) {if (LR_menu == 0) {day_po=2; lcd_menu(0); btnPUSH = true; break;}} // den po
+     if (menu_state==0) {if (LR_menu == 1) {day_ut=2; lcd_menu(0); btnPUSH = true; break;}} // den ut
+     if (menu_state==0) {if (LR_menu == 2) {day_st=2; lcd_menu(0); btnPUSH = true; break;}} // den st
+     if (menu_state==0) {if (LR_menu == 3) {day_ct=2; lcd_menu(0); btnPUSH = true; break;}} // den ct
+     if (menu_state==0) {if (LR_menu == 4) {day_pa=2; lcd_menu(0); btnPUSH = true; break;}} // den pa
+     if (menu_state==0) {if (LR_menu == 5) {day_so=2; lcd_menu(0); btnPUSH = true; break;}} // den so
+     if (menu_state==0) {if (LR_menu == 6) {day_ne=2; lcd_menu(0); btnPUSH = true; break;}} // den ne //btnPUSH = true;
      break;
      
    case btnDOWN: // dolu
-     if(btnPUSH) break;
+     delay(200);
+     //if(btnPUSH) break;
 #ifdef DEBUG     
      Serial.println(F("DOLU"));
 #endif        
@@ -703,26 +748,33 @@ void cti_klavesnici(){ // Rutina cte stiskle klavesy a meni hodnoty parametru
      // cas spinani 1
      if (menu_state==1) {if (LR_menu == 0) {if (cas1_hod <= 0) {cas1_hod = 23;} else {cas1_hod--;} lcd_menu(1); btnPUSH = true; break;} }          // LR menu 0=hod,
      if (menu_state==1) {if (LR_menu == 1) {if (cas1_min <= 0) {cas1_min = 59;} else {cas1_min--;} lcd_menu(1); btnPUSH = true; break;} }          // LR menu 0=min,
-     // perioda dnu 1-7
-     if (menu_state==0) {if (perioda_den <= 1) {perioda_den = 7;} else {perioda_den--;} lcd_menu(0); btnPUSH = true; break;} // krok 1 den
+     // dny po-ne
+     if (menu_state==0) {if (LR_menu == 0) {day_po=0; lcd_menu(0); btnPUSH = true; break;}} // den po
+     if (menu_state==0) {if (LR_menu == 1) {day_ut=0; lcd_menu(0); btnPUSH = true; break;}} // den ut
+     if (menu_state==0) {if (LR_menu == 2) {day_st=0; lcd_menu(0); btnPUSH = true; break;}} // den st
+     if (menu_state==0) {if (LR_menu == 3) {day_ct=0; lcd_menu(0); btnPUSH = true; break;}} // den ct
+     if (menu_state==0) {if (LR_menu == 4) {day_pa=0; lcd_menu(0); btnPUSH = true; break;}} // den pa
+     if (menu_state==0) {if (LR_menu == 5) {day_so=0; lcd_menu(0); btnPUSH = true; break;}} // den so
+     if (menu_state==0) {if (LR_menu == 6) {day_ne=0; lcd_menu(0); btnPUSH = true; break;}} // den ne
      btnPUSH = true;
      break;
      
    case btnSELECT: // menu (select)
-     if(btnPUSH) break;
+     //if(btnPUSH) break;
 #ifdef DEBUG     
      Serial.print(F("MENU "));     
      Serial.println(btnPUSHED);
 #endif       
      menu = true;
      lcd_menu(btnPUSHED); // posouvame menu
-     if (btnPUSHED == 1 || btnPUSHED == 3 || btnPUSHED == 5 || btnPUSHED == 11) {LR_menu = 0;  lcd_menu(btnPUSHED); } // vratime se na zacatek tj doleva
+     if (btnPUSHED == 0 || btnPUSHED == 1 || btnPUSHED == 3 || btnPUSHED == 5 || btnPUSHED == 11) {LR_menu = 0;  lcd_menu(btnPUSHED); } // vratime se na zacatek tj doleva
      btnPUSHED++;
      btnPUSH = true;
+     delay(800);
      break;
     
    case btnNONE:
-     btnPUSH = false;
+     //btnPUSH = false;
      break;
     
    } // end switch
@@ -730,151 +782,221 @@ void cti_klavesnici(){ // Rutina cte stiskle klavesy a meni hodnoty parametru
  
 void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
   switch(krok){
-    case 0: // interval spinani dle dne
+    case 0: // menu 0
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-      lcd.print(F("Interval spinani"));  
+      lcd.print(msg_menu0);  
+      lcd.setCursor(14,1); lcd.print(mezera);lcd.print(msg_otaznik);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
-      lcd.print(perioda_den);
-      lcd.print(F(" [1-7 den]          "));    
+      if(day_po==2)lcd.print(msg_po); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+      lcd.setCursor(2,1);
+      if(day_ut==2)lcd.print(msg_ut); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+      lcd.setCursor(4,1);
+      if(day_st==2)lcd.print(msg_st); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+      lcd.setCursor(6,1);
+      if(day_ct==2)lcd.print(msg_ct); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+      lcd.setCursor(8,1);
+      if(day_pa==2)lcd.print(msg_pa); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+      lcd.setCursor(10,1);
+      if(day_so==2)lcd.print(msg_so); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+      lcd.setCursor(12,1);
+      if(day_ne==2)lcd.print(msg_ne); else {lcd.print(msg_minus);lcd.print(msg_minus);}        
       menu_state = 0;
-      lcd.setCursor(0,1); lcd.blink();
+      if (LR_menu==0) {lcd.setCursor(0,1); lcd.blink(); }
+      if (LR_menu==1) {lcd.setCursor(2,1); lcd.blink();}
+      if (LR_menu==2) {lcd.setCursor(4,1); lcd.blink();}
+      if (LR_menu==3) {lcd.setCursor(6,1); lcd.blink();}
+      if (LR_menu==4) {lcd.setCursor(8,1); lcd.blink();}
+      if (LR_menu==5) {lcd.setCursor(10,1); lcd.blink();}
+      if (LR_menu==6) {lcd.setCursor(12,1); lcd.blink();}
       break;
-    case 1: // cas spinani 1
+    case 1: // menu 1
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-      lcd.print(F("Cas spinani 1   "));  
+      lcd.print(msg_menu1);  
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       print_digits_lcd(cas1_hod);
-      lcd.print(F(":"));
+      lcd.print(msg_dvojtecka);
       print_digits_lcd(cas1_min);
-      lcd.print(F(" [h:m]           "));
+      lcd.print(mezera);
+      lcd.print(msg_hod_min);
+      lcd.print(prazdno);
       menu_state = 1;
       if (LR_menu==0) {lcd.setCursor(1,1); lcd.blink();} // zacne blikat kurzor hod
       if (LR_menu==1) {lcd.setCursor(4,1); lcd.blink();} // zacne blikat kurzor min
       break; 
-    case 2: // interval cas1
+    case 2: // menu 2
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-      lcd.print(F("Interval cas 1 "));
+      lcd.print(msg_menu2);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       print_digits_lcd(doba1);
-      lcd.print(F(" [5-250 sec]     "));
+      lcd.print(mezera);
+      lcd.print(msg_zavL);
+      lcd.print(msg_interval_A);
+      lcd.print(mezera);
+      lcd.print(msg_sec);
+      lcd.print(msg_zavP);
+      lcd.print(prazdno);
       menu_state = 2;
       lcd.setCursor(1,1); lcd.blink();
       break;   
-    case 3: // cas spinani 2
+    case 3: // menu 3
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-      lcd.print(F("Cas spinani 2   "));  
+      lcd.print(msg_menu3);  
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       print_digits_lcd(cas2_hod);
-      lcd.print(F(":"));
+      lcd.print(msg_dvojtecka);
       print_digits_lcd(cas2_min);
-      lcd.print(F(" [h:m]           "));
+      lcd.print(mezera);
+      lcd.print(msg_hod_min);
+      lcd.print(prazdno);
       menu_state = 3;
       if (LR_menu==0) {lcd.setCursor(1,1); lcd.blink();} // zacne blikat kurzor hod
       if (LR_menu==1) {lcd.setCursor(4,1); lcd.blink();} // zacne blikat kurzor min
       break; 
-    case 4: // interval cas 2
+    case 4: // menu 4
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-      lcd.print(F("Interval cas 2 "));
+      lcd.print(msg_menu4);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       print_digits_lcd(doba2);
-      lcd.print(F(" [5-250 sec]     ")); 
+      lcd.print(mezera);
+      lcd.print(msg_zavL);
+      lcd.print(msg_interval_A);
+      lcd.print(mezera);
+      lcd.print(msg_sec);
+      lcd.print(msg_zavP);
+      lcd.print(prazdno); 
       menu_state = 4;
       lcd.setCursor(1,1); lcd.blink();
       break;
-    case 5: // cas spinani 3
+    case 5: // menu 5
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-      lcd.print(F("Cas spinani 3   "));  
+      lcd.print(msg_menu5);  
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       print_digits_lcd(cas3_hod);
-      lcd.print(F(":"));
+      lcd.print(msg_dvojtecka);
       print_digits_lcd(cas3_min);
-      lcd.print(F(" [h:m]           "));
+      lcd.print(mezera);
+      lcd.print(msg_hod_min);
+      lcd.print(prazdno);
       menu_state = 5;
       if (LR_menu==0) {lcd.setCursor(1,1); lcd.blink();} // zacne blikat kurzor hod
       if (LR_menu==1) {lcd.setCursor(4,1); lcd.blink();} // zacne blikat kurzor min
       break; 
-    case 6: // interval cas 3
+    case 6: // menu 6
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-      lcd.print(F("Interval cas 3 "));
+      lcd.print(msg_menu6);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       print_digits_lcd(doba3);
-      lcd.print(F(" [5-250 sec]     ")); 
+      lcd.print(mezera);
+      lcd.print(msg_zavL);
+      lcd.print(msg_interval_A);
+      lcd.print(mezera);
+      lcd.print(msg_sec);
+      lcd.print(msg_zavP);
+      lcd.print(prazdno); 
       menu_state = 6;
       lcd.setCursor(1,1); lcd.blink();
       break;
-    case 7: // preruseni zavlahy kazdych xx vterin (cerpadlo cykluje)
+    case 7: // menu 7
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-      lcd.print(F("Preruseni kazde "));
+      lcd.print(msg_menu7);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       print_digits_lcd(cerpadlo_on);
-      lcd.print(F(" [0-250 sec]     ")); 
+      lcd.print(mezera);
+      lcd.print(msg_zavL);
+      lcd.print(msg_interval_B); 
+      lcd.print(mezera);
+      lcd.print(msg_sec);
+      lcd.print(msg_zavP);
+      lcd.print(prazdno); 
       menu_state = 7;
       lcd.setCursor(1,1); lcd.blink();
       break; 
-    case 8: // preruseni zavlahy na dobu xx vterin (cerpadlo cykluje)
+    case 8: // menu 8
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-      lcd.print(F("Preruseni doba "));
+      lcd.print(msg_menu8);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       lcd.print(pauza_cerpadlo_off);
-      lcd.print(F(" [0-250 sec]     ")); 
+      lcd.print(mezera);
+      lcd.print(msg_zavL);
+      lcd.print(msg_interval_B); 
+      lcd.print(mezera);
+      lcd.print(msg_sec);
+      lcd.print(msg_zavP);
+      lcd.print(prazdno);
       menu_state = 8;
       lcd.setCursor(0,1); lcd.blink();
       break;    
-    case 9: // pouzivat teplotu
+    case 9: // menu 9
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-      lcd.print(F("Pouzit teplotu  "));
+      lcd.print(msg_menu9);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       if (use_teplota==2){  
-        lcd.print(F("ANO ["));
-        lcd.write((byte) 1); // symbol sipka dolu
-        lcd.print(F("=NE]         "));
+        lcd.print(msg_ZAPNUTO);
+        lcd.print(mezera);
+        lcd.print(msg_zavL);
+        lcd.write((byte)2);          // symbol sipka
+        lcd.print(msg_rovnase);
+        lcd.print(msg_VYP);
+        lcd.print(msg_zavP);
         } 
         else {
-          lcd.print(F("NE ["));
-          lcd.write((byte) 2); // symbol sipka 
-          lcd.print(F("=ANO]            "));
+        lcd.print(msg_VYPNUTO);
+        lcd.print(mezera);
+        lcd.print(msg_zavL);
+        lcd.write((byte)1);          // symbol sipka
+        lcd.print(msg_rovnase);
+        lcd.print(msg_ZAP);
+        lcd.print(msg_zavP);
           }
       menu_state = 9;
       lcd.setCursor(0,1); lcd.blink();
       break;    
-    case 10: // pouzivat vlhkost
+    case 10: // menu 10
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-      lcd.print(F("Pouzit vlhkost "));
+      lcd.print(msg_menu10);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       if (use_vlhkost==2){  
-        lcd.print(F("ANO ["));
-        lcd.write((byte) 1); // symbol sipka dolu
-        lcd.print(F("=NE]         "));
+        lcd.print(msg_ZAPNUTO);
+        lcd.print(mezera);
+        lcd.print(msg_zavL);
+        lcd.write((byte)2);          // symbol sipka
+        lcd.print(msg_rovnase);
+        lcd.print(msg_VYP);
+        lcd.print(msg_zavP);
         } 
         else {
-          lcd.print(F("NE ["));
-          lcd.write((byte) 2); // symbol sipka 
-          lcd.print(F("=ANO]            "));
+        lcd.print(msg_VYPNUTO);
+        lcd.print(mezera);
+        lcd.print(msg_zavL);
+        lcd.write((byte)1);          // symbol sipka
+        lcd.print(msg_rovnase);
+        lcd.print(msg_ZAP);
+        lcd.print(msg_zavP);
           }
       menu_state = 10;
       lcd.setCursor(0,1); lcd.blink();
       break;
     case 11: // datum cas
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-      lcd.print(F("Nastaveni casu  "));
+      lcd.print(msg_menu11);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
-      lcd.print(F("                "));
+      lcd.print(prazdno);
       lcd.setCursor(0,1); 
       print_digits_lcd(den);
       lcd.setCursor(2,1); 
-      lcd.write('.');
+      lcd.print(msg_tecka);
       print_digits_lcd(mesic);
-      lcd.print(F("     "));
+      lcd.print(prazdno);
       lcd.setCursor(5,1); 
-      lcd.write('.');
+      lcd.print(msg_tecka);
       print_digits_lcd(rok);  
-      lcd.print(F("   "));
+      lcd.print(prazdno);
       lcd.setCursor(11,1);
       print_digits_lcd(hodina);
       lcd.setCursor(13,1); 
-      lcd.write(':');
+      lcd.print(msg_dvojtecka);
       print_digits_lcd(minuta);
-      lcd.print(F("  ")); 
+      lcd.print(prazdno); 
       menu_state = 11;
       vterina = 0;
       if (LR_menu==0) {lcd.setCursor(1,1); lcd.blink();} // zacne blikat kurzor den
@@ -885,25 +1007,39 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
       break; 
    case 12: // dotaz smazat
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-      lcd.print(F("SMAZAT nastaveni "));
+      lcd.print(msg_menu12);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
-      lcd.print(F("? [")); 
-      lcd.write((byte) 1); // symbol sipka dolu
-      lcd.print(F("=NE "));
-      lcd.write((byte) 2); // symbol sipka 
-      lcd.print(F("=ANO]        ")); 
+      lcd.print(msg_otaznik); 
+      lcd.print(mezera);
+      lcd.print(msg_zavL);
+      lcd.write((byte) 2); // symbol sipka
+      lcd.print(msg_rovnase);
+      lcd.print(msg_ANO);
+      lcd.print(mezera);
+      lcd.write((byte) 1); // symbol sipka
+      lcd.print(msg_rovnase);
+      lcd.print(msg_NE);
+      lcd.print(msg_zavP);
+      lcd.print(prazdno); 
       menu_state = 12;
       lcd.setCursor(0,1); lcd.blink();
       break;           
    case 13: // dotaz ulozit
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-      lcd.print(F("ULOZIT nastaveni "));
+      lcd.print(msg_menu13);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
-      lcd.print(F("? [")); 
-      lcd.write((byte) 1); // symbol sipka dolu
-      lcd.print(F("=NE "));
-      lcd.write((byte) 2); // symbol sipka 
-      lcd.print(F("=ANO]        ")); 
+      lcd.print(msg_otaznik); 
+      lcd.print(mezera);
+      lcd.print(msg_zavL);
+      lcd.write((byte) 2); // symbol sipka
+      lcd.print(msg_rovnase);
+      lcd.print(msg_ANO);
+      lcd.print(mezera);
+      lcd.write((byte) 1); // symbol sipka
+      lcd.print(msg_rovnase);
+      lcd.print(msg_NE);
+      lcd.print(msg_zavP);
+      lcd.print(prazdno); 
       menu_state = 13;
       lcd.setCursor(0,1); lcd.blink();
       break;        
@@ -920,76 +1056,105 @@ void vypisuj_info_lcd(){ // informace na lcd
 // vzor lcd.print("                "); 16 znaku
   if (menu == false){// budeme vypisovat jen kdyz neni aktivni menu a neni prace se serialem
        switch(posun_lcd){ // informacni texty na lcd pouze kdyz neni menu
-         // mnozstvi vody       
          case 0:
-         // teplota
+           // teplota
            tisk_casu();
-           if (blokuj_mereni_teploty){ // pokud prave bezi cas 1-3
-              lcd.setCursor(0,1);
-              lcd.print(F("Prave zalevam     "));
-              } else { // else 1
-                 lcd.setCursor(0,1);
-                 if (celsius > -100){
-                    lcd.print(celsius,1);
-                    //lcd.print(F(" "));
-                    lcd.write((byte) 0); // nulty symbol v pameti lcd - krouzek C
-                    lcd.print(F("C     "));
-                    }//end if
-                 else { lcd.print(F("Chyba cidla!    "));}
-              }//end else   
+           lcd.setCursor(0,1);
+           if (cerpadlo_makej){ // kdyz je cerpadlo v provozu
+              if(cerpadlo_vystup_stav) {lcd.print(msg_VYP);lcd.print(mezera);lcd.print(msg_doba);lcd.print(mezera);} else {lcd.print(msg_ZAP);lcd.print(mezera);lcd.print(msg_doba);lcd.print(mezera);}
+              odpocet_cerpadlo = ((predchoziCasCerpadlo+interval)-aktualniCasCerpadlo)/1000; // cas v sec
+              lcd.print(odpocet_cerpadlo); lcd.print(msg_sec); // zobrazi cas v sec
+              lcd.print(prazdno);
+              }
+           else{              
+             if (celsius > -100){
+               lcd.print(celsius,1);
+               lcd.write((byte) 0); // nulty symbol v pameti lcd - krouzek C
+               lcd.print(F("C"));
+               lcd.print(prazdno);
+             }//end if
+             else { lcd.print(msg_err_cidla);lcd.print(msg_otaznik);lcd.print(prazdno);}  
+           }  
+           lcd.print(prazdno);
            break;
          case 1:
-         // vlhkost
+           // vlhkost
            tisk_casu();
-           if (blokuj_mereni_vlhka){ // pokud prave bezi cas 1-3
-              lcd.setCursor(0,1);
-              lcd.print(F("Prave zalevam...    "));
-              } else { // else 1
-                lcd.setCursor(0,1);
-                lcd.print(vlhkost);
-                lcd.print(F("% "));
-                if(frq<1000)  {lcd.print(frq); lcd.print(F("Hz      "));}
-                if(frq>=1000 && frq<10000) {lcd.print(frq/1000); lcd.print(F("kHz      "));}
-                if(frq>=10000 && frq<100000) {lcd.print(frq/10000); lcd.print(F("kHz*10     "));}
-                if(frq>=100000) {lcd.print(frq/100000); lcd.print(F("kHz*100      "));}
-                  } 
-           break;
-         case 2:
-         // cerpadlo
-            if (cerpadlo_makej){ // kdyz je cerpadlo v provozu
-              lcd.setCursor(0,1);
-              lcd.print(F("Cerp je "));
-              if (cerpadlo_vystup_stav) {lcd.print(F("VYP na "));} else {lcd.print(F("ZAP na "));}
-              long odpocet_cerpadlo = 0;
-              odpocet_cerpadlo = ((predchoziCasCerpadlo+interval)-aktualniCasCerpadlo)/1000; // cas v sec
-              lcd.print(odpocet_cerpadlo); lcd.print(F(" s       ")); // zobrazi cas v sec
-              } else {
-                      posun_lcd=3;
-                      vypisuj_info_lcd();
-                      }
-           break;         
-         case 3:
-          // den 1-7
-         tisk_casu();
            lcd.setCursor(0,1);
-           lcd.print(F("Dnes je ")); 
-           lcd.print(perioda_posun);
-           lcd.print(F(" den         "));
-           posun_lcd=-1; // vynulujeme posun na zacatek
+           if (cerpadlo_makej){ // kdyz je cerpadlo v provozu
+              if(cerpadlo_vystup_stav) {lcd.print(msg_VYP);lcd.print(mezera);lcd.print(msg_doba);lcd.print(mezera);} else {lcd.print(msg_ZAP);lcd.print(mezera);lcd.print(msg_doba);lcd.print(mezera);}
+              odpocet_cerpadlo = ((predchoziCasCerpadlo+interval)-aktualniCasCerpadlo)/1000; // cas v sec
+              lcd.print(odpocet_cerpadlo); lcd.print(msg_sec); // zobrazi cas v sec
+              lcd.print(prazdno);
+              }
+           else {   
+              if(frq==0) {lcd.print(msg_err_cidla);lcd.print(msg_otaznik);}
+              else {lcd.print(vlhkost);lcd.print(msg_procenta);lcd.print(mezera);}
+              if(frq<1000 && frq>0)  {lcd.print(frq); lcd.print(msg_Hz);}
+              else{lcd.print(frq/1000); lcd.print(msg_kHz);}
+           }   
+           lcd.print(prazdno);
            break;      
+         case 2:
+           // den po-ne
+           tisk_casu();
+           lcd.setCursor(0,1);
+           if (cerpadlo_makej){ // kdyz je cerpadlo v provozu
+              if(cerpadlo_vystup_stav) {lcd.print(msg_VYP);lcd.print(mezera);lcd.print(msg_doba);lcd.print(mezera);} else {lcd.print(msg_ZAP);lcd.print(mezera);lcd.print(msg_doba);lcd.print(mezera);}
+              odpocet_cerpadlo = ((predchoziCasCerpadlo+interval)-aktualniCasCerpadlo)/1000; // cas v sec
+              lcd.print(odpocet_cerpadlo); lcd.print(msg_sec); // zobrazi cas v sec
+              lcd.print(prazdno);
+              }
+           else{   
+             lcd.setCursor(0,1);
+             lcd.print(msg_dnes); // dnes je
+             lcd.print(mezera);
+             get_day = weekday(); // 1-7
+             if(get_day==2) {lcd.print(msg_pondeli);}
+             if(get_day==3) {lcd.print(msg_utery);}
+             if(get_day==4) {lcd.print(msg_streda);}
+             if(get_day==5) {lcd.print(msg_ctvrtek);}
+             if(get_day==6) {lcd.print(msg_patek);}
+             if(get_day==7) {lcd.print(msg_sobota);}
+             if(get_day==1) {lcd.print(msg_nedele);}
+           }  
+           lcd.print(prazdno);
+           break;      
+         case 3:
+           tisk_casu();
+           lcd.setCursor(0,1);
+           if (cerpadlo_makej){ // kdyz je cerpadlo v provozu
+              if(cerpadlo_vystup_stav) {lcd.print(msg_VYP);lcd.print(mezera);lcd.print(msg_doba);lcd.print(mezera);} else {lcd.print(msg_ZAP);lcd.print(mezera);lcd.print(msg_doba);lcd.print(mezera);}
+              odpocet_cerpadlo = ((predchoziCasCerpadlo+interval)-aktualniCasCerpadlo)/1000; // cas v sec
+              lcd.print(odpocet_cerpadlo); lcd.print(msg_sec); // zobrazi cas v sec
+              lcd.print(prazdno);
+           }
+           else{   
+             lcd.setCursor(0,0);
+             lcd.print(msg_menu0); // zavlaha bude
+             lcd.print(prazdno);
+             lcd.setCursor(14,1); lcd.print(prazdno);
+             lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
+             if(day_po==2)lcd.print(msg_po); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+             lcd.setCursor(2,1);
+             if(day_ut==2)lcd.print(msg_ut); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+             lcd.setCursor(4,1);
+             if(day_st==2)lcd.print(msg_st); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+             lcd.setCursor(6,1);
+             if(day_ct==2)lcd.print(msg_ct); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+             lcd.setCursor(8,1);
+             if(day_pa==2)lcd.print(msg_pa); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+             lcd.setCursor(10,1);
+             if(day_so==2)lcd.print(msg_so); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+             lcd.setCursor(12,1);
+             if(day_ne==2)lcd.print(msg_ne); else {lcd.print(msg_minus);lcd.print(msg_minus);}        
+           }
+           lcd.print(prazdno);
+           posun_lcd=-1; // vynulujeme posun na zacatek
+           break;        
          } // end switch   
     } //end if not menu
 } // end void
-
-void cti_vlhkost(){
-#ifdef DEBUG     
-   Serial.print(F("FREK:"));
-   Serial.print(frq);
-   Serial.print(F(" VLHK:"));
-   Serial.println(vlhkost);
-#endif  
-} // end void
-
 
 long mapuj(long x, long in_min, long in_max, long out_min, long out_max){ // vraci prevedenou hodnotu tj funkce map
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -1028,16 +1193,18 @@ void firmware(){ // vypise reklamu a verzi fw na serial a lcd
   lcd.setCursor(0,1);                 // 2 radek LCD displeje
   lcd.print(verze);                   // Verze programu zarizeni
 #ifdef DEBUG   
-  Serial.println(F("MENU NL&CR:"));
-  Serial.println(F("? help")); 
-  Serial.println(F("A run cas1"));
-  Serial.println(F("B run cas2"));
-  Serial.println(F("C run cas3"));
-  Serial.println(F("D date"));
-  Serial.println(F("E period off"));
-  Serial.println(F("F EE default"));
-  Serial.println(F("G EE print"));
-  Serial.println(F("I frek"));
+  Serial.println(F("*** MENU *************"));
+  Serial.println(F("? Napoveda")); 
+  Serial.println(F("A Spustit program 1"));
+  Serial.println(F("B Spustit program 2"));
+  Serial.println(F("C Spustit program 3"));
+  Serial.println(F("D Nastavit datum a cas"));
+  Serial.println(F("E Smazat EEPROM"));
+  Serial.println(F("F Tisk EEPROM"));
+  Serial.println(F("G Vypsat frekvenci"));
+  Serial.println(F("H Vypsat teplotu"));
+  Serial.println(F("I Vypsat datum a cas"));
+  Serial.println(F("**********************"));
 #endif  
   delay(2000);
 } // end void 
@@ -1045,10 +1212,10 @@ void firmware(){ // vypise reklamu a verzi fw na serial a lcd
 void nacti_RTC(){ // nacte cas z RTC a vytiskne na lcd (serial) pripadne chybu   
    setSyncProvider(RTC.get);   // nastaveni syncu casu z RTC
    setSyncInterval(86400); // za jak dlouho se zavola sync z RTC
-      //24h*60m*60s=86400
+      //24h*60m*60s=86400 tj jeden den
    if (timeStatus() != timeSet) { // skok do menu nastavit cas
 #ifdef DEBUG        
-      Serial.println(F("RTC?"));
+      Serial.println(msg_rtc);
 #endif     
       menu = true;         // povolime menu
       btnPUSHED = 13;      // v menu je 13 cas a datum
@@ -1060,26 +1227,32 @@ void nacti_RTC(){ // nacte cas z RTC a vytiskne na lcd (serial) pripadne chybu
 void tisk_casu(){ // tiskne na prvni radek datum a cas
   lcd.setCursor(0,0);
   print_digits_lcd(day());
-  lcd.write('.');
+  lcd.print(msg_tecka);
   print_digits_lcd(month());
-  lcd.write('.');
+  lcd.print(msg_tecka);
   lcd.print(year());  
-  lcd.print(F("  "));
+  lcd.print(mezera);
+  lcd.print(mezera);
   lcd.setCursor(11,0);
   print_digits_lcd(hour());
-  lcd.write(':');
+  lcd.print(msg_dvojtecka);
   print_digits_lcd(minute());
-  lcd.print(F(" "));
-  serial_clock_display(); // tisk casu na serial
+  lcd.print(mezera);
 } // end void 
 
 void serial_clock_display(){ // tisk aktualniho systemoveho casu na serial
 #ifdef DEBUG  
   print_digits(hour());
-  Serial.write(':');
+  Serial.print(msg_dvojtecka);
   print_digits(minute());
-  Serial.write(':');
+  Serial.print(msg_dvojtecka);
   print_digits(second());
+  Serial.print(mezera);
+  print_digits(day());
+  Serial.print(msg_tecka);
+  print_digits(month());
+  Serial.print(msg_tecka);
+  Serial.print(year()); 
   Serial.println(); 
 #endif    
 } //end void
@@ -1088,24 +1261,25 @@ void print_digits(int number) { // dodava na serial nulu kdyz je mensi nez 10
 #ifdef DEBUG  
   if (number >= 0 && number < 10) {
     Serial.write('0');}
-  Serial.print(number);
+    Serial.print(number);
 #endif    
 }// end void
 
 void print_digits_lcd(int number) { // dodava na lcd nulu kdyz je mensi nez 10
   if (number >= 0 && number < 10) {
     lcd.write('0');}
-  lcd.print(number);
+    lcd.print(number);
 }// end void
 
 void RTC_a_restart(){ // ulozi do rtc a udela restart
 #ifdef DEBUG 
-   Serial.println(F("RBT"));
+   Serial.println(msg_rbt);
 #endif     
    lcd.home();
-   lcd.print(F("Restartuji se..."));
+   lcd.print(msg_rbt);
+   lcd.print(prazdno);
    lcd.setCursor(0,1);
-   lcd.print("                ");
+   lcd.print(prazdno);
    setTime(hodina,minuta,vterina,den,mesic,rok);
    RTC.set(now());
    delay(4500); // pockame na watchdog az to sestreli
@@ -1125,7 +1299,7 @@ void cerpadlo(){ // rutina spinani cerpadla cas on a cas off
          interval = pauza_cerpadlo_off*1000;        // off time cerpadla
                 } // end else
 #ifdef DEBUG                  
-     Serial.print(F("CERPADLO: "));
+     Serial.print(msg_cerpadlo);
      Serial.println(cerpadlo_vystup_stav);     
 #endif       
      cerpadlo_vystup_stav = !(cerpadlo_vystup_stav);
@@ -1137,37 +1311,38 @@ void cerpadlo(){ // rutina spinani cerpadla cas on a cas off
          } // end else
 } // end void  
 
-void regulace_vlhk(){ // reguluje dle vlhkosti
-//------------------------------------------
-  // http://www.gammon.com.au/forum/?id=11504
-  /*
-// stop Timer 0 interrupts from throwing the count out
-  byte oldTCCR0A = TCCR0A;
-  byte oldTCCR0B = TCCR0B;
-  TCCR0A = 0;    // stop timer 0
-  TCCR0B = 0;    
-  */
-  startCounting (500);  // how many ms to count for
-  while (!counterReady){
-    wdt_reset();
+bool is_this_day(){ // vraci cislo true pokud je aktualni den jako je nastaven v menu
+  byte this_day = weekday();
+  if(day_po==2){// ma se zalevat v pondeli
+    if(this_day==2) return true; // ano je pondeli
+  }
+  if(day_ut==2){// ma se zalevat v utery
+    if(this_day==3) return true; 
+  }
+  if(day_st==2){// ma se zalevat ve stredu
+    if(this_day==4) return true; 
+  }
+  if(day_ct==2){// ma se zalevat ve ctvrtek
+    if(this_day==5) return true; 
+  }
+  if(day_pa==2){// ma se zalevat v patek
+    if(this_day==6) return true; 
+  }
+  if(day_so==2){// ma se zalevat v sobotu
+    if(this_day==7) return true; 
+  }
+  if(day_ne==2){// ma se zalevat v nedeli
+    if(this_day==1) return true; 
   } 
-  // adjust counts by counting interval to give frequency in Hz
-  frq = (timerCounts *  1000.0) / timerPeriod;
+  return false; // neni povolen zadny den tak ne       
+} //end bool
 
-  //Serial.println(F("--"));
-  //Serial.println ((unsigned long) frq);
-  //Serial.println (" Hz.");
-  /*
-  // restart timer 0
-  TCCR0A = oldTCCR0A;
-  TCCR0B = oldTCCR0B;
-  */
-
+void regulace_vlhk(){ // reguluje dle vlhkosti
   vlhkost = mapuj(frq,cidlo_fMIN,cidlo_fMAX,100,0); // prevod frekvence na vlhkost stupnice vlhka 0-100 s ohledem na min a max frekvenci z cidla
   if(vlhkost >= 100)  vlhkost = 100;
   if(vlhkost <1)   vlhkost = 0;    
   
-  if (perioda_je_tu && use_vlhkost==2){ // kdyz je jiz dany x-ty den (toto nastavuje casovac krok 86400 sec) a je povolena vlhkost
+  if (is_this_day() && use_vlhkost==2){ // kdyz je jiz dany x-ty den (toto nastavuje casovac krok 86400 sec) a je povolena vlhkost
       if (vlhkost < 40){ // zmerena vlhkost je 10,20,30 (na stupnici 0-100)
          if (CAS1 || CAS2 || CAS3){     // je prave cas1, cas2, cas3 na casovaci
             blokuj_mereni_vlhka = true; // zakazeme merit vlhkost po dobu zalevani casu1 a na lcd vypisujeme ze bezi cas 1 namisto vlhkosti
@@ -1241,7 +1416,7 @@ void regulace_vlhk(){ // reguluje dle vlhkosti
 } // end void  
 
 void regulace_tepl(){ // reguluje dle teploty
-  if (perioda_je_tu && use_teplota==2){ // kdyz je jiz dany x-ty den (toto nastavuje casovac krok 86400 sec) a je povolena teplota
+  if (is_this_day() && use_teplota==2){ // kdyz je jiz dany x-ty den (toto nastavuje casovac krok 86400 sec) a je povolena teplota
       if (celsius >= 40.0){ // zmerena teplota je > 40 stupnu
          if (CAS1 || CAS2 || CAS3){     // je prave cas1, cas2, cas3 na casovaci
             blokuj_mereni_teploty = true; // zakazeme merit teplotu po dobu zalevani casu1 a na lcd vypisujeme ze bezi cas 1 namisto teploty
@@ -1327,10 +1502,6 @@ void init_teplota(){
 void cti_teplotu(){                      // #include <DallasTemperature.h> pomoci teto knihovny se neceka 1000ms ale meri se hned :-)
    sensors.requestTemperatures();        // pozadavek na zmereni teploty
    celsius = sensors.getTempCByIndex(0); // index 0 je prvni cidlo dalas
-#ifdef DEBUG  
-   Serial.print(F("TEPL:"));
-   Serial.println(celsius,1);
-#endif   
 } // end void
 
 //**********************************************************************************************
@@ -1339,44 +1510,43 @@ void cti_serial(){
 #ifdef DEBUG  
     if (Serial.available()>0) {
       int znak = Serial.read(); 
-      if (znak == 'F') { // klavesa F smazat a default hodnoty eeprom
-         clear_eeprom(); init_eeprom(); 
-         vterina = 0; minuta = 0; hodina = 12; den = 1; mesic = 1; rok = 15;
-         RTC_a_restart(); 
-         } // end if   
+      if (znak == 'A') {  // spustit casovac cas1       
+         ZavlahaCasa();
+         } // end if 
+      if (znak == 'B') {  // spustit casovac cas2    
+         ZavlahaCasb();     
+         } // end if  
+      if (znak == 'C') {  // spustit casovac cas3    
+         ZavlahaCasc();     
+         } // end if  
       if (znak == 'D') { // klavesa D nastaveni casu a datumu
          setTimeData();
          RTC_a_restart(); // pomocne funkce
-         } // end if 
-      if (znak == 'A') {  // spustit casovac cas1
-         PeriodaDen();
-         ZavlahaCasa();
-         perioda_je_tu = true;
-         } // end if 
-      if (znak == 'B') {  // spustit casovac cas2
-         PeriodaDen();
-         ZavlahaCasb();
-         perioda_je_tu = true;
-         } // end if    
-      if (znak == 'C') {  // spustit casovac cas3
-         PeriodaDen();
-         ZavlahaCasc();
-         perioda_je_tu = true;
-         } // end if 
-       if (znak == 'E') {  // smazat den PeriodaVyp() jako 32:59:59
-         PeriodaVyp();
-         Serial_ende();
-         } // end if 
-       if (znak == 'G') {  // vypsat eeprom
+         } // end if               
+      if (znak == 'E') { // smazat a default hodnoty eeprom
+         clear_eeprom(); init_eeprom(); 
+         vterina = 0; minuta = 0; hodina = 0; den = 1; mesic = 1; rok = 18;
+         RTC_a_restart(); 
+         } // end if              
+      if (znak == 'F') {  // vypsat eeprom
          ee_read();
          } // end if     
-       if (znak == 'I') {  // vypsat frekvenci a vlhkost
-         Serial.print(F("FR:"));
+      if (znak == 'G') {  // vypsat frekvenci a vlhkost
+         CasovacMereni();
+         Serial.print(F("Frekvence:"));
          Serial.print(frq);
-         Serial.print(F(" VLH:"));
+         Serial.print(F(" Vlhkost:"));
          Serial.println(vlhkost);
-         } // end if      
-       if (znak == '?') {  // vypsat menu
+         } // end if    
+      if (znak == 'H') {  // vypsat teplotu
+         CasovacMereni();
+         Serial.print(F("Teplota:"));
+         Serial.println(celsius);
+         } // end if    
+      if (znak == 'I') {  // vypsat datum a cas
+         serial_clock_display();
+         } // end if                
+      if (znak == '?') {  // vypsat menu
          firmware();
          } // end if     
       } // end serial 
@@ -1385,34 +1555,27 @@ void cti_serial(){
 
 void setTimeData(){ // vkladani udaju ze serialu
 #ifdef DEBUG  
-  Serial.print(F("Rok "));
+  Serial.print(msg_vloz); Serial.print(F(" Rok 18-99: "));
   rok = readByte(); // musi byt 2x jinak se hned vlozi nula a skoci na mesic
   rok = readByte();
   Serial.println(rok);
-  Serial.print(F("Den "));
+  Serial.print(msg_vloz); Serial.print(F(" Den 1-31: "));
   den = readByte();
   Serial.println(den);
-  Serial.print(F("Mes "));
+  Serial.print(msg_vloz); Serial.print(F(" Mes 1-12: "));
   mesic = readByte();
   Serial.println(mesic);
-  Serial.print(F("Hod "));
+  Serial.print(msg_vloz); Serial.print(F(" Hod 0-23: "));
   hodina = readByte();
   Serial.println(hodina);
-  Serial.print(F("Min "));
+  Serial.print(msg_vloz); Serial.print(F(" Min 0-59: "));
   minuta = readByte();
   Serial.println(minuta);
-  Serial.print(F("Sec "));
+  Serial.print(msg_vloz); Serial.print(F(" Sec 0-59: "));
   vterina = readByte();
   Serial.println(vterina);
-  Serial.print(hodina);Serial.print(":");Serial.print(minuta);Serial.print(":");
-  Serial.print(vterina);Serial.print(" ");Serial.print(den);Serial.print(".");
-  Serial.print(mesic);Serial.print(".");Serial.println(rok);
 #endif  
-  lcd.home();
-  lcd.print(F("Restartuji se..."));
-  lcd.setCursor(0,1);
-  lcd.print(F("                "));
-  delay(2000);
+  RTC_a_restart();
 } // end void  
 
 byte readByte(){ // vraci cislo zadane na serialu
