@@ -386,7 +386,8 @@ void loop() {
 
 // casovace *************************************************************************************
 void nastav_casovace(){  
-   Alarm.timerRepeat(3, CasovacSec);                    // prepni text na LCD po xx sec
+   Alarm.timerRepeat(1, CasovacRUNpgm);                 // text na LCD po sec kdyz bezi program
+   Alarm.timerRepeat(3, Casovac3Sec);                   // prepina texty po xx sec
    Alarm.timerRepeat(5, CasovacMereni);                 // zmer teplotu po xx sec
    Alarm.alarmRepeat(cas1_hod,cas1_min,0, ZavlahaCasa); // h:m cas zavlazovani 1 
    Alarm.alarmRepeat(cas2_hod,cas2_min,0, ZavlahaCasb); // h:m cas zavlazovani 2 
@@ -426,11 +427,30 @@ void ZavlahaCasc(){ //
    trvani_doby = doba3*1000;
 } // end void
 
-void CasovacSec(){ // posouva text na lcd a meri z cidel po xx sec  
-  if (menu==false){  
-    posun_lcd++;
-    vypisuj_info_lcd();
-  }
+void Casovac3Sec(){  // posouva pomalu text na lcd
+  if(menu==false){       // kdyz neni menu
+    if(cerpadlo_makej==false){ // nejede program
+       posun_lcd++;
+       vypisuj_info_lcd();
+    }
+  }//end if  
+}//end void
+
+void CasovacRUNpgm(){ // posouva rychle text na lcd pokud jede program  
+  if(menu==false){  
+    if(cerpadlo_makej==true){ // kdyz je cerpadlo v provozu
+      lcd.setCursor(0,0);
+      lcd.print(msg_cerpadlo);
+      lcd.print(mezera);
+      if(cerpadlo_vystup_stav) {
+        lcd.print(msg_VYP); lcd.print(prazdno);lcd.setCursor(0,1);lcd.print(msg_doba);lcd.print(mezera);}
+      else{
+        lcd.print(msg_ZAP); lcd.print(prazdno);lcd.setCursor(0,1);lcd.print(msg_doba);lcd.print(mezera);}
+      odpocet_cerpadlo = ((predchoziCasCerpadlo+interval)-aktualniCasCerpadlo)/1000; // cas v sec
+      lcd.print(odpocet_cerpadlo); lcd.print(mezera);lcd.print(msg_sec); // zobrazi cas v sec
+      lcd.print(prazdno);
+    }//end if  
+  }//end menu  
 } // end void 
 
 void CasovacMereni(){ // meri teplotu po xx sec
@@ -1056,99 +1076,67 @@ void vypisuj_info_lcd(){ // informace na lcd
 // vzor lcd.print("                "); 16 znaku
   if (menu == false){// budeme vypisovat jen kdyz neni aktivni menu a neni prace se serialem
        switch(posun_lcd){ // informacni texty na lcd pouze kdyz neni menu
-         case 0:
-           // teplota
-           tisk_casu();
-           lcd.setCursor(0,1);
-           if (cerpadlo_makej){ // kdyz je cerpadlo v provozu
-              if(cerpadlo_vystup_stav) {lcd.print(msg_VYP);lcd.print(mezera);lcd.print(msg_doba);lcd.print(mezera);} else {lcd.print(msg_ZAP);lcd.print(mezera);lcd.print(msg_doba);lcd.print(mezera);}
-              odpocet_cerpadlo = ((predchoziCasCerpadlo+interval)-aktualniCasCerpadlo)/1000; // cas v sec
-              lcd.print(odpocet_cerpadlo); lcd.print(msg_sec); // zobrazi cas v sec
-              lcd.print(prazdno);
-              }
-           else{              
+         case 0:  
+             lcd.setCursor(0,0);
+             tisk_casu();    
+             lcd.setCursor(0,1);        
              if (celsius > -100){
                lcd.print(celsius,1);
                lcd.write((byte) 0); // nulty symbol v pameti lcd - krouzek C
                lcd.print(F("C"));
                lcd.print(prazdno);
              }//end if
-             else { lcd.print(msg_err_cidla);lcd.print(msg_otaznik);lcd.print(prazdno);}  
-           }  
-           lcd.print(prazdno);
+             else {
+              lcd.print(msg_err_cidla);lcd.print(msg_otaznik);lcd.print(prazdno);
+              }  
            break;
          case 1:
            // vlhkost
+           lcd.setCursor(0,0);
            tisk_casu();
            lcd.setCursor(0,1);
-           if (cerpadlo_makej){ // kdyz je cerpadlo v provozu
-              if(cerpadlo_vystup_stav) {lcd.print(msg_VYP);lcd.print(mezera);lcd.print(msg_doba);lcd.print(mezera);} else {lcd.print(msg_ZAP);lcd.print(mezera);lcd.print(msg_doba);lcd.print(mezera);}
-              odpocet_cerpadlo = ((predchoziCasCerpadlo+interval)-aktualniCasCerpadlo)/1000; // cas v sec
-              lcd.print(odpocet_cerpadlo); lcd.print(msg_sec); // zobrazi cas v sec
-              lcd.print(prazdno);
-              }
-           else {   
-              if(frq==0) {lcd.print(msg_err_cidla);lcd.print(msg_otaznik);}
-              else {lcd.print(vlhkost);lcd.print(msg_procenta);lcd.print(mezera);}
-              if(frq<1000 && frq>0)  {lcd.print(frq); lcd.print(msg_Hz);}
-              else{lcd.print(frq/1000); lcd.print(msg_kHz);}
-           }   
+           if(frq==0) {lcd.print(msg_err_cidla);lcd.print(msg_otaznik);}
+           else {lcd.print(vlhkost);lcd.print(msg_procenta);lcd.print(mezera);}
+           if(frq<1000 && frq>0)  {lcd.print(frq); lcd.print(msg_Hz);}
+           else{lcd.print(frq/1000); lcd.print(msg_kHz);}
            lcd.print(prazdno);
            break;      
          case 2:
            // den po-ne
+           lcd.setCursor(0,0);
            tisk_casu();
            lcd.setCursor(0,1);
-           if (cerpadlo_makej){ // kdyz je cerpadlo v provozu
-              if(cerpadlo_vystup_stav) {lcd.print(msg_VYP);lcd.print(mezera);lcd.print(msg_doba);lcd.print(mezera);} else {lcd.print(msg_ZAP);lcd.print(mezera);lcd.print(msg_doba);lcd.print(mezera);}
-              odpocet_cerpadlo = ((predchoziCasCerpadlo+interval)-aktualniCasCerpadlo)/1000; // cas v sec
-              lcd.print(odpocet_cerpadlo); lcd.print(msg_sec); // zobrazi cas v sec
-              lcd.print(prazdno);
-              }
-           else{   
-             lcd.setCursor(0,1);
-             lcd.print(msg_dnes); // dnes je
-             lcd.print(mezera);
-             get_day = weekday(); // 1-7
-             if(get_day==2) {lcd.print(msg_pondeli);}
-             if(get_day==3) {lcd.print(msg_utery);}
-             if(get_day==4) {lcd.print(msg_streda);}
-             if(get_day==5) {lcd.print(msg_ctvrtek);}
-             if(get_day==6) {lcd.print(msg_patek);}
-             if(get_day==7) {lcd.print(msg_sobota);}
-             if(get_day==1) {lcd.print(msg_nedele);}
-           }  
+           lcd.print(msg_dnes); // dnes je
+           lcd.print(mezera);
+           get_day = weekday(); // 1-7
+           if(get_day==2) {lcd.print(msg_pondeli);}
+           if(get_day==3) {lcd.print(msg_utery);}
+           if(get_day==4) {lcd.print(msg_streda);}
+           if(get_day==5) {lcd.print(msg_ctvrtek);}
+           if(get_day==6) {lcd.print(msg_patek);}
+           if(get_day==7) {lcd.print(msg_sobota);}
+           if(get_day==1) {lcd.print(msg_nedele);}
            lcd.print(prazdno);
            break;      
          case 3:
-           tisk_casu();
-           lcd.setCursor(0,1);
-           if (cerpadlo_makej){ // kdyz je cerpadlo v provozu
-              if(cerpadlo_vystup_stav) {lcd.print(msg_VYP);lcd.print(mezera);lcd.print(msg_doba);lcd.print(mezera);} else {lcd.print(msg_ZAP);lcd.print(mezera);lcd.print(msg_doba);lcd.print(mezera);}
-              odpocet_cerpadlo = ((predchoziCasCerpadlo+interval)-aktualniCasCerpadlo)/1000; // cas v sec
-              lcd.print(odpocet_cerpadlo); lcd.print(msg_sec); // zobrazi cas v sec
-              lcd.print(prazdno);
-           }
-           else{   
-             lcd.setCursor(0,0);
-             lcd.print(msg_menu0); // zavlaha bude
-             lcd.print(prazdno);
-             lcd.setCursor(14,1); lcd.print(prazdno);
-             lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
-             if(day_po==2)lcd.print(msg_po); else {lcd.print(msg_minus);lcd.print(msg_minus);}
-             lcd.setCursor(2,1);
-             if(day_ut==2)lcd.print(msg_ut); else {lcd.print(msg_minus);lcd.print(msg_minus);}
-             lcd.setCursor(4,1);
-             if(day_st==2)lcd.print(msg_st); else {lcd.print(msg_minus);lcd.print(msg_minus);}
-             lcd.setCursor(6,1);
-             if(day_ct==2)lcd.print(msg_ct); else {lcd.print(msg_minus);lcd.print(msg_minus);}
-             lcd.setCursor(8,1);
-             if(day_pa==2)lcd.print(msg_pa); else {lcd.print(msg_minus);lcd.print(msg_minus);}
-             lcd.setCursor(10,1);
-             if(day_so==2)lcd.print(msg_so); else {lcd.print(msg_minus);lcd.print(msg_minus);}
-             lcd.setCursor(12,1);
-             if(day_ne==2)lcd.print(msg_ne); else {lcd.print(msg_minus);lcd.print(msg_minus);}        
-           }
+           lcd.setCursor(0,0);
+           lcd.print(msg_menu0); // zavlaha bude
+           lcd.print(prazdno);
+           lcd.setCursor(14,1); lcd.print(prazdno);
+           lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
+           if(day_po==2)lcd.print(msg_po); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+           lcd.setCursor(2,1);
+           if(day_ut==2)lcd.print(msg_ut); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+           lcd.setCursor(4,1);
+           if(day_st==2)lcd.print(msg_st); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+           lcd.setCursor(6,1);
+           if(day_ct==2)lcd.print(msg_ct); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+           lcd.setCursor(8,1);
+           if(day_pa==2)lcd.print(msg_pa); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+           lcd.setCursor(10,1);
+           if(day_so==2)lcd.print(msg_so); else {lcd.print(msg_minus);lcd.print(msg_minus);}
+           lcd.setCursor(12,1);
+           if(day_ne==2)lcd.print(msg_ne); else {lcd.print(msg_minus);lcd.print(msg_minus);}        
            lcd.print(prazdno);
            posun_lcd=-1; // vynulujeme posun na zacatek
            break;        
@@ -1267,7 +1255,8 @@ void print_digits(int number) { // dodava na serial nulu kdyz je mensi nez 10
 
 void print_digits_lcd(int number) { // dodava na lcd nulu kdyz je mensi nez 10
   if (number >= 0 && number < 10) {
-    lcd.write('0');}
+    lcd.print(F("0"));
+    }
     lcd.print(number);
 }// end void
 
@@ -1299,7 +1288,7 @@ void cerpadlo(){ // rutina spinani cerpadla cas on a cas off
          interval = pauza_cerpadlo_off*1000;        // off time cerpadla
                 } // end else
 #ifdef DEBUG                  
-     Serial.print(msg_cerpadlo);
+     Serial.print(msg_cerpadlo);Serial.print(mezera);
      Serial.println(cerpadlo_vystup_stav);     
 #endif       
      cerpadlo_vystup_stav = !(cerpadlo_vystup_stav);
