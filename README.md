@@ -9,13 +9,16 @@ K řídící desce je připojeno teplotní čidlo DS18B20, které měří teplot
 K řídící desce je také připojeno čidlo vlhkosti s frekvenčním výstupem 50Hz-5kHz (pro možnost regulace zavlažování dle vlhkosti) https://pihrt.com/elektronika/272-snimac-vlhkosti-pro-zalevaci-automat<br>
 Veškeré nastavení automatu se provádí pomocí tlačítek a zobrazení údajů na 16x2 LCD displeji.<br>
 
-## Pro více informací navštivte...
+## Pro více informací navštivte web...
 Martin Pihrt - www.pihrt.com: https://pihrt.com/elektronika/400-uno-florist-automata<br>
 
 
 ## Pohled na desku a připojení čidel
-<a href="photos\fw1.00\foto (25).png"><img src="photos\fw1.00\foto (25).png" width="80%"></a>
-<a href="photos\fw1.00\foto (29).png"><img src="photos\fw1.00\foto (29).png" width="80%"></a>
+<a href="photos\fw1.00\foto (25).jpg"><img src="photos\fw1.00\foto (25).jpg" width="80%"></a>
+<a href="photos\fw1.00\foto (29).jpg"><img src="photos\fw1.00\foto (29).jpg" width="80%"></a>
+
+## Video (fw 1.00 beta)
+<video controls="controls" width="640" height="480" type="video/mpeg"> Váš prohlížeč nepodporuje video přehrávač HTML5. <source src="videos\automata_1.00.mp4" type="video/mp4" /></video>
 
 ## Nastavení zavlažování dle dnů od pondělí do neděle
 <a href="photos\fw1.00\foto (6).png"><img src="photos\fw1.00\foto (6).png" width="50%"></a>
@@ -47,6 +50,10 @@ V menu lze nastavit po jaké době běhu programu (1, 2, 3) se má výstup čerp
 <a href="photos\fw1.00\foto (13).png"><img src="photos\fw1.00\foto (13).png" width="50%"></a>
 <a href="photos\fw1.00\foto (14).png"><img src="photos\fw1.00\foto (14).png" width="50%"></a>
 
+## Nastavení datumu a času
+Zleva nastavujeme den, měsíc, rok, hodina a minuta. Vteřina se při uložení nastaví na "0". Čas je ukládán do obvodu RTC DS1307.
+<a href="photos\fw1.00\foto (18).png"><img src="photos\fw1.00\foto (18).png" width="50%"></a>
+
 ## Smazání do továrního nastavení
 Pokud chceme zařízení vymazat do továrního nastavení stiskneme v menu jako níže na obrázku "ANO".<br>
 <a href="photos\fw1.00\foto (19).png"><img src="photos\fw1.00\foto (19).png" width="50%"></a><br>
@@ -62,6 +69,12 @@ Pokud chceme zařízení vymazat do továrního nastavení stiskneme v menu jako
 * nepoužívat regulaci teplotou
 * nepoužívat regulaci vhlkostí
 * zavlažovat ve dnech po-ne
+
+## Uložit nastavení
+Všechny parametry se ukládají do trvalé paměti EEPROM.
+<a href="photos\fw1.00\foto (20).png"><img src="photos\fw1.00\foto (20).png" width="50%"></a>
+<a href="photos\fw1.00\foto (21).png"><img src="photos\fw1.00\foto (21).png" width="50%"></a>
+<a href="photos\fw1.00\foto (22).png"><img src="photos\fw1.00\foto (22).png" width="50%"></a>
 
 ## Připojení vstupů a výstupů  
 * LCD:                    pin 8, 9,  2,  3,  6,  7 (Rs, E,DB4,DB5,DB6,DB7)
