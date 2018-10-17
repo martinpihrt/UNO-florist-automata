@@ -18,7 +18,7 @@ Martin Pihrt - www.pihrt.com: https://pihrt.com/elektronika/400-uno-florist-auto
 <a href="photos\fw1.00\foto (29).jpg"><img src="photos\fw1.00\foto (29).jpg" width="80%"></a>
 
 ## Video (fw 1.00 beta)
-<video controls="controls" width="640" height="480" type="video/mpeg"> Váš prohlížeč nepodporuje video přehrávač HTML5. <source src="videos\automata_1.00.mp4" type="video/mp4" /></video>
+[![Ukázka chodu](https://www.pihrt.com/images/videa/automata_1.00.mp4)](https://www.pihrt.com/images/videa/automata_1.00.mp4)
 
 ## Nastavení zavlažování dle dnů od pondělí do neděle
 <a href="photos\fw1.00\foto (6).png"><img src="photos\fw1.00\foto (6).png" width="50%"></a>
