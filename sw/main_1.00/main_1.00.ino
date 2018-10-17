@@ -238,36 +238,25 @@ byte sipka_dolu[8] = {          // ikona sipky smer dolu
 };
 
 // definice adresy eeprom a promenych z eeprom
-#define adr_cas1_hod     2         // cas1 0-23 hod
-byte cas1_hod;
-#define adr_cas1_min     3         // cas1 0-59 min (max 23:30) krok 30 min
-byte cas1_min;
-#define adr_doba1        4         // doba1 5-60 min krok 5 min
-byte doba1;
-#define adr_cas2_hod     5         // cas2 0-23 hod
-byte cas2_hod;
-#define adr_cas2_min     6         // cas2 0-59 min (max 23:30) krok 30 min
-byte cas2_min;
-#define adr_doba2        7         // doba2 5-60 min krok 5 min
-byte doba2;
-#define adr_cas3_hod     8         // cas3 0-23 hod
-byte cas3_hod;
-#define adr_cas3_min     9         // cas3 0-59 min (max 23:30) krok 30 min
-byte cas3_min;
-#define adr_doba3        10        // doba3 5-60 min krok 5 min
-byte doba3;
-#define adr_cerpadlo_on  11        // doba sepnuti cerpadla na 0-10 min krok 1 min
-byte cerpadlo_on;
-#define adr_pauza_cerpadlo_off  12 // doba cekani cerpadla na 0-5 min krok 1 min
-byte pauza_cerpadlo_off;
-#define adr_use_teplota  13        // pouzivat mereni teploty 1=off, 2=on
-byte use_teplota;
-#define adr_last_teplota 14        // posledni zmerena teplota (hodnota je float x1000)
-long last_teplota;
-#define adr_use_vlhkost  16        // pouzivat mereni vlhkosti 1=off, 2=on
-byte use_vlhkost;
-#define adr_last_vlhkost 17        // posledni zmerena vlhkost (namerena hodnota 0-100)
-long last_vlhkost;
+long
+    last_teplota,
+     last_vlhkost;
+
+byte
+    cas1_hod,
+    cas1_min,
+    doba1,
+    cas2_hod,
+    cas2_min,
+    doba2,
+    cas3_hod,
+    cas3_min,
+    doba3,
+    cerpadlo_on,
+    pauza_cerpadlo_off,
+    use_teplota,
+    use_vlhkost;
+
 #define adr_day_po       20
 #define adr_day_ut       21
 #define adr_day_st       22
@@ -275,13 +264,31 @@ long last_vlhkost;
 #define adr_day_pa       24
 #define adr_day_so       25
 #define adr_day_ne       26
-byte day_po = 2;
-byte day_ut = 2;
-byte day_st = 2;
-byte day_ct = 2;
-byte day_pa = 2;
-byte day_so = 2;
-byte day_ne = 2;
+
+#define adr_doba1        4         // doba1 5-60 min krok 5 min
+#define adr_doba2        7         // doba2 5-60 min krok 5 min
+#define adr_doba3        10        // doba3 5-60 min krok 5 min
+#define adr_cas1_hod     2         // cas1 0-23 hod
+#define adr_cas1_min     3         // cas1 0-59 min (max 23:30) krok 30 min
+#define adr_cas2_hod     5         // cas2 0-23 hod
+#define adr_cas2_min     6         // cas2 0-59 min (max 23:30) krok 30 min
+#define adr_cas3_hod     8         // cas3 0-23 hod
+#define adr_cas3_min     9         // cas3 0-59 min (max 23:30) krok 30 min
+#define adr_cerpadlo_on  11        // doba sepnuti cerpadla na 0-10 min krok 1 min
+#define adr_use_teplota  13        // pouzivat mereni teploty 1=off, 2=on
+#define adr_use_vlhkost  16        // pouzivat mereni vlhkosti 1=off, 2=on
+#define adr_last_teplota 14        // posledni zmerena teplota (hodnota je float x1000)
+#define adr_last_vlhkost 17        // posledni zmerena vlhkost (namerena hodnota 0-100)
+#define adr_pauza_cerpadlo_off  12 // doba cekani cerpadla na 0-5 min krok 1 min
+
+byte
+    day_po = 2,
+    day_ut = 2,
+    day_st = 2,
+    day_ct = 2,
+    day_pa = 2,
+    day_so = 2,
+    day_ne = 2;
 
 //**********************************************************************************************
 // citac frekvence na D5 ********************************************************************************
@@ -356,12 +363,14 @@ ISR (TIMER2_COMPA_vect){// grab counter value before it changes any more
 //**********************************************************************************************
 // setup - loop ********************************************************************************
 void setup() {
+
     inicializace();     // pomocne funkce (inicializace serial, lcd)
     init_piny();        // pomocne funkce (nastavy vystupy a vypne je)
     init_eeprom();      // eeprom (nacte ulozene hodnoty, pripadne ulozi default do eeprom)
     firmware();         // pomocne funkce (init serial a lcd, fw na serial a lcd)
     setSyncProvider(RTC.get);   // nastaveni syncu casu z RTC
     setSyncInterval(300);       // za jak dlouho se zavola sync z RTC den=24h*60m*60s tj 86400
+
     if(timeStatus() != timeSet) { // skok do menu nastavit cas
       lcd.clear();
       lcd.print(msg_rtc_run);
@@ -374,6 +383,7 @@ void setup() {
       LR_menu = 0;         // vratime kruzor doleva
       lcd_menu(btnPUSHED); // vytiskneme polozku z menu
     }
+
     cti_serial();       // serial_rx_tx (komunikace se serialem)
     init_teplota();     // pomocne funkce cidlo DS18B20
     Mereni();           // nacte teplotu a vlhkost
@@ -382,20 +392,25 @@ void setup() {
 } // end setup
 
 void loop() {
+
   casovacLCD();                // vypisuje na LCD stavova okna po xx sec
   cti_serial();                // serial_rx_tx (komunikace se serialem)
   cti_klavesnici();            // klavesnice (vyhodnocujeme klavesy)
+
   if (save) {save_eeprom();}   // ulozi do pameti z lcd menu tlacitek
   else if(!menu) {//neni aktivni menu
+
      cti_cas_datum();
      Mereni();              // nacte teplotu a vlhkost
      regulace_vlhk();       // zpracuje zavlazovani dle vhlkosti
      regulace_tepl();       // zpracuje zavlažování dle teploty
      cerpadlo();            // zpracuj cerpadlo
+
      if((hour()==cas1_hod)&&(minute()==cas1_min)&&(second()==0)) ZavlahaCasa(); // pokud je cas povolime zavlazovani pgm1
      if((hour()==cas2_hod)&&(minute()==cas2_min)&&(second()==0)) ZavlahaCasb(); // pokud je cas povolime zavlazovani pgm2
      if((hour()==cas3_hod)&&(minute()==cas3_min)&&(second()==0)) ZavlahaCasc(); // pokud je cas povolime zavlazovani pgm3
   }//end else
+
   wdt_reset();
 } // end loop
 
@@ -464,7 +479,7 @@ void casovacLCD(){  // posouva pomalu text na lcd
 }//end void
 
 void Mereni(){ // meri teplotu a frekvenci po xx sec
-  if (menu==false){
+  if (!menu){
     cti_teplotu();   // ds18b20
     cti_frekvenci();
   }
