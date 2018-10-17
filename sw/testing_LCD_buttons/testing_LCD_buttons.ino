@@ -13,14 +13,18 @@ int lcd_key = 0;
 int adc_key_in = 0;
 
 int read_LCD_buttons() {
+
     adc_key_in = analogRead( 0 );
-    Serial.println( adc_key_in );
-    if ( adc_key_in > 1000 ) return btnNONE;
+
+    Serial.print( F( "\nadc_key: " ) );
+    Serial.print( adc_key_in );
+
     if ( adc_key_in < 50 ) return btnRIGHT;
     if ( adc_key_in < 195 ) return btnUP;
     if ( adc_key_in < 380 ) return btnDOWN;
     if ( adc_key_in < 555 ) return btnLEFT;
     if ( adc_key_in < 790 ) return btnSELECT;
+
     return btnNONE;
 }
 
@@ -45,22 +49,27 @@ void loop() {
 
     switch ( lcd_key ) {
         case btnRIGHT: {
+            Serial.print( F( "RIGHT" ) );
             lcd.print( "RIGHT" );
             break;
         }
         case btnLEFT: {
+            Serial.print( F( "LEFT" ) );
             lcd.print( "LEFT" );
             break;
         }
         case btnUP: {
+            Serial.print( F( "UP" ) );
             lcd.print( "UP" );
             break;
         }
         case btnDOWN: {
+            Serial.print( F( "DOWN" ) );
             lcd.print( "DOWN" );
             break;
         }
         case btnSELECT: {
+            Serial.print( F( "SELECT" ) );
             lcd.print( "SELECT  " );
             break;
         }
