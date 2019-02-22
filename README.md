@@ -1,4 +1,4 @@
-UNO florist automata Readme
+UNO florist automata Readme  
 ====
 
 ## UNO florist automata - Zavlažovač květin je založený na platformě Arduino a desce Arduino UNO<br>
@@ -85,3 +85,7 @@ Všechny parametry se ukládají do trvalé paměti EEPROM.
 * I2C:                    pin 18 (A4 SDA), 19 (A5 SCL) používá DS1307 adr. 0x68
 * Teplota:                pin 16  DS18B20 rudá +5V, černá GND, modrá (bílá) Data
 * Čerpadlo:               pin 17 (pro výstup - čerpadlo)
+
+## Verze FW, HW
+* 1.00 výchozí verze desky a programu (měření vlhkosti pomocí frekvence)
+* 1.10 upravená verze HW (přidán konektor na vstup A1) a FW (možnost měření vlhkosti pomocí sondy s napěťovým výstupem) příklad použité sondy: https://www.diymore.cc/products/2pcs-capacitive-soil-moisture-sensor-v1-2-analog-corrosion-resistant-dc-3-3-5-5v)
