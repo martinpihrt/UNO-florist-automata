@@ -55,8 +55,8 @@ char verze[]="21.02.19-V1.10"; // Verze programu
 #define cidlo_fMIN     5000    // Hz z cidla pri mokru ve vode
 #define cidlo_fMAX     60      // Hz z cidla pri suchu na vzduchu
 // napětí čidlo na AD
-#define cidlo_AD_min   580     // Cislo 0-1023 na AD převodníku za sucha (wet sensor)
-#define cidlo_AD_max   250     // Cislo 0-1023 na AD převodníku za mokra (dry sensor)
+#define cidlo_AD_min   250     // Cislo 0-1023 na AD převodníku min 
+#define cidlo_AD_max   580     // Cislo 0-1023 na AD převodníku max
 
 #define cerpadlo_pin   17      // Cislo pinu pro cerpadlo
 #define temp_pin       16      // Cislo pinu cidla teploty
@@ -114,6 +114,7 @@ char msg_volt[]        ="V";
 char msg_Hz[]          ="Hz";
 char msg_kHz[]         ="kHz";
 char msg_err_cidla[]   ="Chyba cidla";
+char msg_AD_range[]    ="0-1023";
 char msg_tecka[]       =".";
 char msg_zavL[]        ="[";
 char msg_zavP[]        ="]";
@@ -504,15 +505,28 @@ void casovacLCD(){         // posouva pomalu text na lcd
 
 void Mereni(){ // meri teplotu a frekvenci pokud neni aktivni menu a nebezi program 1-3
   if (!menu && !CAS1 && !CAS2 && !CAS3){
-    cti_teplotu();   // ds18b20
+    cti_teplotu();       // ds18b20
     #ifdef USE_FREQ_PROBE
-      cti_frekvenci();  // freq snimac vlhkosti
+      cti_frekvenci();   // freq snimac vlhkosti
     #endif  
     
     #ifdef USE_AD_PROBE
-      cti_napeti();    // napeti snimac vhlkosti
+      cti_napeti();      // napeti snimac vhlkosti
     #endif  
   }
+  
+  #ifdef USE_FREQ_PROBE
+     vlhkost = mapuj(frq,cidlo_fMIN,cidlo_fMAX,100,0); // prevod frekvence na vlhkost stupnice vlhka 0-100 s ohledem na min a max frekvenci z cidla
+  #endif
+  #ifdef USE_AD_PROBE
+     AD_in   = mapuj(AD_in,0,1023,cidlo_AD_min,cidlo_AD_max);  // prevod 0-1023 z cidla na rozsah cidlo_AD_min,cidlo_AD_max
+    // Serial.print(AD_in);Serial.print(",");
+     vlhkost = mapuj(AD_in,cidlo_AD_min,cidlo_AD_max,100,0);   // prevod cidlo_AD_min,cidlo_AD_max na 0-100 vlhkost
+    // Serial.println(vlhkost);
+  #endif
+      
+  if(vlhkost >= 100)  vlhkost = 100;  
+  if(vlhkost <1)   vlhkost = 0;
 } // end void
 
 void cti_frekvenci(){
@@ -1444,17 +1458,6 @@ bool is_this_day(){ // vraci cislo true pokud je aktualni den jako je nastaven v
 } //end bool
 
 void regulace_vlhk(){ // reguluje dle vlhkosti
-  #ifdef USE_FREQ_PROBE
-     vlhkost = mapuj(frq,cidlo_fMIN,cidlo_fMAX,100,0); // prevod frekvence na vlhkost stupnice vlhka 0-100 s ohledem na min a max frekvenci z cidla
-  #endif
-
-  #ifdef USE_AD_PROBE
-     vlhkost = mapuj(AD_in,cidlo_AD_min,cidlo_AD_max,100,0); // prevod napeti na vlhkost stupnice vlhka 0-100 s ohledem na min a max napeti z cidla
-  #endif
-      
-  if(vlhkost >= 100)  vlhkost = 100;
-  if(vlhkost <1)   vlhkost = 0;
-
   if (is_this_day() && use_vlhkost==2 && use_teplota==1){ // kdyz je konkretni den a je povolena vlhkost ale neni povolena regulace teplotou
       if (vlhkost < 40){ // zmerena vlhkost je 10,20,30 (na stupnici 0-100)
          if (CAS1 || CAS2 || CAS3){     // je prave cas1, cas2, cas3 na casovaci
@@ -1631,9 +1634,15 @@ void cti_serial(){
       #ifdef USE_AD_PROBE
           if (znak == 'G') {  // vypsat napětí a vstup
             Serial.print(AD_in);
+            Serial.print(msg_zavL);
+            Serial.print(msg_AD_range);
+            Serial.print(msg_zavP);
             Serial.print(msg_mezera);
             Serial.print(AD_volt);
-            Serial.println(msg_volt);
+            Serial.print(msg_volt);
+            Serial.print(msg_mezera);
+            Serial.print(vlhkost);
+            Serial.println(msg_procenta);            
           } // end if
       #endif       
       if (znak == 'H') {  // vypsat teplotu
