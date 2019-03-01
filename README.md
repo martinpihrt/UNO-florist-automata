@@ -97,3 +97,4 @@ Všechny parametry se ukládají do trvalé paměti EEPROM.<br>
 ## Verze FW, HW
 * 1.00 výchozí verze desky a programu (měření vlhkosti pomocí frekvence)
 * 1.10 upravená verze HW (přidán konektor na vstup A1) a FW (možnost měření vlhkosti pomocí sondy s napěťovým výstupem) příklad použité sondy: https://www.diymore.cc/products/2pcs-capacitive-soil-moisture-sensor-v1-2-analog-corrosion-resistant-dc-3-3-5-5v)
+* 1.11 příprava na podporu více jazyků (zatím není hotové)
