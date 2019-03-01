@@ -1,0 +1,116 @@
+<document type="ProfiCAD sxe" version="6.0" bgColor="FFFFFF" pgsHor="1" pgsVer="1" pgsOri="LANDSCAPE" pgsMrgn="0, 0, 1, 1" zoom="50" frame="YES" rastr="20" showT="YES" showV="YES">
+<summary author="" date="01.03.2019"/>
+<PrintSettings PrinterName="" PaperSize="1" FormName="letter" SheetSizeX="297" SheetSizeY="210" WantsCustom="1" CustomSizeX="400" CustomSizeY="500"/>
+<RefGridSettings FieldSize="50"/>
+<fonts letter="155,0,0,0,Lucida Sans Unicode,000000" text="110,0,0,0,Lucida Sans Unicode,000000" type="85,0,0,0,Arial,000000" value="85,0,0,0,Arial,000000"/>
+<tb use="0" h="0" v="0" name="C:\Users\Public\Documents\proficad library\_TB\standard.ptb">
+<repo>
+<imgDesc lastGuid="9c118d35-f0c1-45b0-b06d-162ac2ecb37f" imgType="4">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</imgDesc>
+</repo>
+<layers current="0">
+<layer name="0" v="1">
+<rect left="-840" top="-200" right="840" bottom="200" op-lw="4"/>
+<text x="-829" y="-170" f="80,0,0,0,Tahoma,000000" al="2">Oddělení</text>
+<text x="-829" y="-114" f="80,0,0,0,Tahoma,000000" al="2">{odd}</text>
+<text x="-608" y="-170" f="80,0,0,0,Tahoma,000000" al="2">Technický referent</text>
+<text x="-608" y="-114" f="80,0,0,0,Tahoma,000000" al="2">{techRef}</text>
+<text x="-190" y="-170" f="80,0,0,0,Tahoma,000000" al="2">Kreslil</text>
+<text x="-190" y="-114" f="80,0,0,0,Tahoma,000000" al="2">{author}</text>
+<text x="313" y="-170" f="80,0,0,0,Tahoma,000000" al="2">Přezkoušel</text>
+<text x="313" y="-114" f="80,0,0,0,Tahoma,000000" al="2">{prezkousel}</text>
+<text x="-190" y="-48" f="80,0,0,0,Tahoma,000000" al="2">Druh dokumentu</text>
+<text x="-190" y="8" f="80,0,0,0,Tahoma,000000" al="2">{druhDokumentu}</text>
+<text x="313" y="-48" f="80,0,0,0,Tahoma,000000" al="2">Status dokumentu</text>
+<text x="313" y="8" f="80,0,0,0,Tahoma,000000" al="2">{statusDokumentu}</text>
+<polyline op-lw="4" pts="-840,-80,840,-80,"/>
+<polyline op-lw="4" pts="-200,-200,-200,200,"/>
+<polyline op-lw="4" pts="-620,-200,-620,-80,"/>
+<polyline op-lw="4" pts="300,-200,300,200,"/>
+<polyline op-lw="4" pts="-200,40,840,40,"/>
+<text x="-190" y="70" f="80,0,0,0,Tahoma,000000" al="2">Název, doplňující název</text>
+<text x="-190" y="120" f="80,0,0,0,Tahoma,000000" al="2">{nazev}</text>
+<text x="-190" y="173" f="80,0,0,0,Tahoma,000000" al="2">{nazevDopln}</text>
+<text x="313" y="70" f="80,0,0,0,Tahoma,000000" al="2">Číslo dokumentu</text>
+<text x="560" y="70" f="80,0,0,0,Tahoma,000000" al="2">{cisloDok}</text>
+<text x="717" y="173" f="80,0,0,0,Tahoma,000000" al="2">{sheet}</text>
+<text x="710" y="8" f="80,0,0,0,Tahoma,000000" al="2">{zmena}</text>
+<text x="710" y="-48" f="80,0,0,0,Tahoma,000000" al="2">Změna</text>
+<text x="313" y="126" f="80,0,0,0,Tahoma,000000" al="2">Datum vydání</text>
+<text x="595" y="126" f="80,0,0,0,Tahoma,000000" al="2">Jazyk</text>
+<text x="313" y="173" f="80,0,0,0,Tahoma,000000" al="2">{date}</text>
+<text x="591" y="173" f="80,0,0,0,Tahoma,000000" al="2">{jazyk}</text>
+<text x="726" y="126" f="80,0,0,0,Tahoma,000000" al="2">List</text>
+<polyline op-lw="4" pts="300,100,840,100,"/>
+<polyline op-lw="4" pts="580,100,580,200,"/>
+<polyline op-lw="4" pts="700,100,700,200,"/>
+<img lastGuid="9c118d35-f0c1-45b0-b06d-162ac2ecb37f" preserveAspect="1" left="-805" top="-10" right="-240" bottom="138"/>
+<polyline op-lw="4" pts="700,-80,700,40,"/>
+</layer>
+</layers>
+</tb>
+<repo/>
+<layers current="1">
+<layer name="-1" v="1"/>
+<layer name="0" v="1">
+<polyline op-lw="7" pts="200,440,300,440,300,240,500,240,500,440,700,440,700,240,900,240,900,440,1100,440,1100,240,1300,240,1300,440,1400,440,1400,440,"/>
+<polyline pts="200,440,200,640,"/>
+<polyline pts="1400,440,1400,640,"/>
+<polyline op-at="9" pts="200,560,1400,560,"/>
+<polyline pts="300,240,300,100,"/>
+<polyline pts="500,240,500,100,"/>
+<polyline pts="700,240,700,100,"/>
+<polyline op-at="8" pts="300,180,500,180,"/>
+<polyline op-at="9" pts="500,180,700,180,"/>
+<text x="400" y="121" f="110,0,0,0,Lucida Sans Unicode,000000" al="9">ZAP</text>
+<text x="600" y="120" f="110,0,0,0,Lucida Sans Unicode,000000" al="9">VYP</text>
+<text x="820" y="600" f="110,0,0,0,Lucida Sans Unicode,000000" al="9">Celkový čas se upravuje dle vlhkosti</text>
+<polyline op-lw="7" pts="200,1240,300,1240,300,1040,500,1040,500,1240,700,1240,700,1040,900,1040,900,1240,1100,1240,1100,1040,1300,1040,1300,1240,1400,1240,1400,1240,"/>
+<polyline pts="200,1240,200,1600,"/>
+<polyline pts="3800,1240,3800,1440,"/>
+<polyline op-at="9" pts="200,1380,3800,1380,"/>
+<text x="1380" y="1561" f="110,0,0,0,Lucida Sans Unicode,000000" al="9">Celkový čas zavlažování nastavený v menu pro program 1 (2,3)</text>
+<text x="1360" y="1420" f="110,0,0,0,Lucida Sans Unicode,000000" al="9">Celkový čas se upravuje dle vlhkosti + 50% nastaveného času</text>
+<text x="1121" y="121" f="110,0,0,0,Lucida Sans Unicode,000000" al="9">Cyklování výstupu zap 50% /vyp 50%</text>
+<text x="1621" y="921" f="155,1,0,0,Lucida Sans Unicode,FF00FF" l="1" al="9">Vlhkost &amp;lt; 40%, celkový čas bude nastavený čas + 1/2 nastaveného času v menu (programu 1,2,3)</text>
+<text x="1561" y="1881" f="155,1,0,0,Lucida Sans Unicode,FF8040" l="1" al="9">Vlhkost &amp;gt;= 40% a &amp;lt; 60%, celkový čas bude stejný jako nastavený čas v menu (program 1,2,3)</text>
+<polyline op-lw="7" pts="200,2180,300,2180,300,1980,500,1980,500,2180,700,2180,700,1980,900,1980,900,2180,1100,2180,1100,1980,1300,1980,1300,2180,1400,2180,1400,2180,"/>
+<polyline op-at="9" pts="200,2320,2600,2320,"/>
+<text x="1140" y="2360" f="110,0,0,0,Lucida Sans Unicode,000000" al="9">Celkový čas se neupravuje</text>
+<polyline op-lw="7" pts="1380,2180,1500,2180,1500,1980,1700,1980,1700,2180,1900,2180,1900,1980,2100,1980,2100,2180,2300,2180,2300,1980,2500,1980,2500,2180,2600,2180,2600,2180,"/>
+<polyline op-at="9" pts="200,1520,2600,1520,"/>
+<polyline pts="2600,1240,2600,1600,"/>
+<text x="1480" y="2501" f="110,0,0,0,Lucida Sans Unicode,000000" al="9">Celkový čas zavlažování nastavený v menu pro program 1 (2,3)</text>
+<polyline pts="200,2180,200,2540,"/>
+<polyline pts="2600,2180,2600,2540,"/>
+<polyline op-at="9" pts="200,2460,2600,2460,"/>
+<text x="3480" y="700" f="360,1,0,0,Lucida Sans Unicode,000000" l="1" al="9">150% času</text>
+<text x="3480" y="1700" f="360,1,0,0,Lucida Sans Unicode,000000" l="1" al="9">100% času</text>
+<text x="3480" y="820" f="200,0,0,0,Lucida Sans Unicode,000000" al="9">program 1, 2, 3</text>
+<text x="3480" y="1840" f="200,0,0,0,Lucida Sans Unicode,000000" al="9">program 1, 2, 3</text>
+<text x="1521" y="2821" f="155,1,0,0,Lucida Sans Unicode,0000FF" l="1" al="9">Vlhkost &amp;gt;= 60% a &amp;lt; 80%, celkový čas bude stejný jako nastavený čas v menu (program 1,2)</text>
+<polyline op-lw="7" pts="200,3120,300,3120,300,2920,500,2920,500,3120,700,3120,700,2920,900,2920,900,3120,1100,3120,1100,2920,1300,2920,1300,3120,1400,3120,1400,3120,"/>
+<polyline op-at="9" pts="200,3260,2600,3260,"/>
+<text x="1320" y="3280" f="110,0,0,0,Lucida Sans Unicode,000000" al="9">Celkový čas se neupravuje</text>
+<polyline op-lw="7" pts="1380,3120,1500,3120,1500,2920,1700,2920,1700,3120,1900,3120,1900,2920,2100,2920,2100,3120,2300,3120,2300,2920,2500,2920,2500,3120,2600,3120,2600,3120,"/>
+<text x="1480" y="3441" f="110,0,0,0,Lucida Sans Unicode,000000" al="9">Celkový čas zavlažování nastavený v menu pro program 1 (2)</text>
+<polyline pts="200,3120,200,3480,"/>
+<polyline pts="2600,3120,2600,3480,"/>
+<polyline op-at="9" pts="200,3400,2600,3400,"/>
+<text x="3500" y="2700" f="360,1,0,0,Lucida Sans Unicode,000000" l="1" al="9">100% času</text>
+<text x="3460" y="2840" f="200,0,0,0,Lucida Sans Unicode,000000" al="9">program 1, 2</text>
+<polyline op-lw="7" pts="1400,1240,1500,1240,1500,1040,1700,1040,1700,1240,1900,1240,1900,1040,2100,1040,2100,1240,2300,1240,2300,1040,2500,1040,2500,1240,2600,1240,2600,1240,"/>
+<polyline op-lw="7" pts="2600,1240,2700,1240,2700,1040,2900,1040,2900,1240,3100,1240,3100,1040,3300,1040,3300,1240,3500,1240,3500,1040,3700,1040,3700,1240,3800,1240,3800,1240,"/>
+<text x="1381" y="3801" f="155,1,0,0,Lucida Sans Unicode,008000" l="1" al="9">Vlhkost &amp;gt;= 80%, celkový čas bude stejný jako nastavený čas v menu (program 1)</text>
+<polyline op-lw="7" pts="200,4120,300,4120,300,3920,500,3920,500,4120,700,4120,700,3920,900,3920,900,4120,1100,4120,1100,3920,1300,3920,1300,4120,1400,4120,1400,4120,"/>
+<polyline op-at="9" pts="200,4260,2600,4260,"/>
+<text x="1320" y="4280" f="110,0,0,0,Lucida Sans Unicode,000000" al="9">Celkový čas se neupravuje</text>
+<polyline op-lw="7" pts="1380,4120,1500,4120,1500,3920,1700,3920,1700,4120,1900,4120,1900,3920,2100,3920,2100,4120,2300,4120,2300,3920,2500,3920,2500,4120,2600,4120,2600,4120,"/>
+<text x="1440" y="4441" f="110,0,0,0,Lucida Sans Unicode,000000" al="9">Celkový čas zavlažování nastavený v menu pro program 1</text>
+<polyline pts="200,4120,200,4480,"/>
+<polyline pts="2600,4120,2600,4480,"/>
+<polyline op-at="9" pts="200,4400,2600,4400,"/>
+<text x="3500" y="3700" f="360,1,0,0,Lucida Sans Unicode,000000" l="1" al="9">100% času</text>
+<text x="3460" y="3840" f="200,0,0,0,Lucida Sans Unicode,000000" al="9">program 1</text>
+</layer>
+</layers>
+</document>
