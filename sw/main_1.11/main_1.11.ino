@@ -89,104 +89,107 @@ char verze[]="01.03.19-V1.11"; // Verze programu
 */
 
 // CZ texty pro LCD a seriový výstup
-const char msg_prazdno[]       PROGMEM ="                ";   // 16 znaku mezera
-const char msg_mezera[]        PROGMEM =" ";                  // 1 znak mezera
-const char msg_menu0[]         PROGMEM ="Zavlaha ve dnech";   // menu 0
-const char msg_menu1[]         PROGMEM ="Cas programu 1  ";   // menu 1
-const char msg_menu2[]         PROGMEM ="Beh programu 1  ";   // menu 2
-const char msg_menu3[]         PROGMEM ="Cas programu 2  ";   // menu 3
-const char msg_menu4[]         PROGMEM ="Beh programu 2  ";   // menu 4
-const char msg_menu5[]         PROGMEM ="Cas programu 3  ";   // menu 5
-const char msg_menu6[]         PROGMEM ="Beh programu 3  ";   // menu 6
-const char msg_menu7[]         PROGMEM ="Cerp vypnout za ";   // menu 7
-const char msg_menu8[]         PROGMEM ="Cekat vypnuty   ";   // menu 8
-const char msg_menu9[]         PROGMEM ="Reguluj teplotou";   // menu 9
-const char msg_menu10[]        PROGMEM ="Reguluj vlhkosti";   // menu 10
-const char msg_menu11[]        PROGMEM ="Datum a cas     ";   // menu 11
-const char msg_menu12[]        PROGMEM ="SMAZAT nastaveni";   // menu 12
-const char msg_menu13[]        PROGMEM ="ULOZIT nastaveni";   // menu 13
-const char msg_ZAPNUTO[]       PROGMEM ="ZAPNUTO";            // pouzito v menu 9, 10, 12, 13
-const char msg_VYPNUTO[]       PROGMEM ="VYPNUTO";            // pouzito v menu 9, 10, 12, 13
-const char msg_VYP[]           PROGMEM ="VYP";                // pouzito v menu 9, 10
-const char msg_ZAP[]           PROGMEM ="ZAP";                // pouzito v menu 9, 10
-const char msg_dvojtecka[]     PROGMEM =":";                  // pouzito v menu 1, 3, 5
-const char msg_rovnase[]       PROGMEM ="=";
-const char msg_procenta[]      PROGMEM ="%";
-const char msg_volt[]          PROGMEM ="V";
-const char msg_Hz[]            PROGMEM ="Hz";
-const char msg_kHz[]           PROGMEM ="kHz";
-const char msg_err_cidla[]     PROGMEM ="Chyba cidla";
-const char msg_AD_range[]      PROGMEM ="0-1023";
-const char msg_tecka[]         PROGMEM =".";
-const char msg_zavL[]          PROGMEM ="[";
-const char msg_zavP[]          PROGMEM ="]";
-const char msg_otaznik[]       PROGMEM ="?";
-const char msg_minus[]         PROGMEM ="-";
-const char msg_lomitko[]       PROGMEM ="/";
-const char msg_ANO[]           PROGMEM ="ANO";
-const char msg_NE[]            PROGMEM ="NE";
-const char msg_po[]            PROGMEM ="Po";
-const char msg_ut[]            PROGMEM ="Ut";
-const char msg_st[]            PROGMEM ="St";
-const char msg_ct[]            PROGMEM ="Ct";
-const char msg_pa[]            PROGMEM ="Pa";
-const char msg_so[]            PROGMEM ="So";
-const char msg_ne[]            PROGMEM ="Ne";
-const char msg_dnes[]          PROGMEM ="Dnes je";
-const char msg_pondeli[]       PROGMEM ="pondeli";
-const char msg_utery[]         PROGMEM ="utery";
-const char msg_streda[]        PROGMEM ="streda";
-const char msg_ctvrtek[]       PROGMEM ="ctvrtek";
-const char msg_patek[]         PROGMEM ="patek";
-const char msg_sobota[]        PROGMEM ="sobota";
-const char msg_nedele[]        PROGMEM ="nedele";
-const char msg_hod_min[]       PROGMEM ="hod:min";
-const char msg_sec[]           PROGMEM ="sec";
-const char msg_interval_A[]    PROGMEM ="5-250";
-const char msg_interval_B[]    PROGMEM ="0-250";
-const char msg_ulozeno[]       PROGMEM ="ULOZENO";
-const char msg_rbt[]           PROGMEM ="RESTARTUJI SE";
-const char msg_run_now[]       PROGMEM ="BEZI PROGRAM...";
-const char msg_rtc[]           PROGMEM ="RTC NENALEZEN!";  // nenasel na I2C 0x68
-const char msg_rtc_run[]       PROGMEM ="CAS NENASTAVEN!"; // vraci 165:165:165 165.165.2165
-const char msg_cerpadlo[]      PROGMEM ="CERPADLO";
-const char msg_vloz[]          PROGMEM ="Vloz";
-const char msg_doba[]          PROGMEM ="doba";
-const char msg_chyba_dne[]     PROGMEM ="CHYBA RTC!";
-const char msg_cas[]           PROGMEM ="CAS";
-const char msg_jedna[]         PROGMEM ="1";
-const char msg_dva[]           PROGMEM ="2";
-const char msg_tri[]           PROGMEM ="3";
-const char msg_last_T[]        PROGMEM ="Posledni teplota";
-const char msg_last_V[]        PROGMEM ="Posledni vlhkost";
-const char msg_EE_del[]        PROGMEM ="EEPROM smazana";
-const char msg_menu[]          PROGMEM ="MENU";
-const char msg_dwn[]           PROGMEM ="DOLU";
-const char msg_up[]            PROGMEM ="NAHORU";
-const char msg_left[]          PROGMEM ="VLEVO";
-const char msg_right[]         PROGMEM ="VPRAVO";
-const char msg_end[]           PROGMEM ="Konec";
-const char msg_language[]      PROGMEM ="Jazyk";
-const char msg_czech[]         PROGMEM ="Cestina";
-const char msg_english[]       PROGMEM ="Anglictina";
+// deklarace promennych PROGMEM
+// aktuálně 79 textů
+const char msg_prazdno[]       PROGMEM ="                ";   // msg 0, 16 znaku mezera
+const char msg_mezera[]        PROGMEM =" ";                  // msg 1, 1 znak mezera
+const char msg_menu0[]         PROGMEM ="Zavlaha ve dnech";   // msg 2, menu 0
+const char msg_menu1[]         PROGMEM ="Cas programu 1";     // msg 3, menu 1
+const char msg_menu2[]         PROGMEM ="Beh programu 1";     // msg 4, menu 2
+const char msg_menu3[]         PROGMEM ="Cas programu 2";     // msg 5, menu 3
+const char msg_menu4[]         PROGMEM ="Beh programu 2";     // msg 6, menu 4
+const char msg_menu5[]         PROGMEM ="Cas programu 3";     // msg 7, menu 5
+const char msg_menu6[]         PROGMEM ="Beh programu 3";     // msg 8, menu 6
+const char msg_menu7[]         PROGMEM ="Cerp vypnout za";    // msg 9, menu 7
+const char msg_menu8[]         PROGMEM ="Cekat vypnuty";      // msg 10, menu 8
+const char msg_menu9[]         PROGMEM ="Reguluj teplotou";   // msg 11, menu 9
+const char msg_menu10[]        PROGMEM ="Reguluj vlhkosti";   // msg 12, menu 10
+const char msg_menu11[]        PROGMEM ="Datum a cas";        // msg 13, menu 11
+const char msg_menu12[]        PROGMEM ="SMAZAT nastaveni";   // msg 14, menu 12
+const char msg_menu13[]        PROGMEM ="ULOZIT nastaveni";   // msg 15, menu 13
+const char msg_ZAPNUTO[]       PROGMEM ="ZAPNUTO";            // msg 16, pouzito v menu 9, 10, 12, 13
+const char msg_VYPNUTO[]       PROGMEM ="VYPNUTO";            // msg 17, pouzito v menu 9, 10, 12, 13
+const char msg_VYP[]           PROGMEM ="VYP";                // msg 18, pouzito v menu 9, 10
+const char msg_ZAP[]           PROGMEM ="ZAP";                // msg 19, pouzito v menu 9, 10
+const char msg_dvojtecka[]     PROGMEM =":";                  // msg 20, pouzito v menu 1, 3, 5
+const char msg_rovnase[]       PROGMEM ="=";                  // msg 21,
+const char msg_procenta[]      PROGMEM ="%";                  // msg 22,
+const char msg_volt[]          PROGMEM ="V";                  // msg 23, 
+const char msg_Hz[]            PROGMEM ="Hz";                 // msg 24,
+const char msg_kHz[]           PROGMEM ="kHz";                // msg 25,
+const char msg_err_cidla[]     PROGMEM ="Chyba cidla";        // msg 26,
+const char msg_AD_range[]      PROGMEM ="0-1023";             // msg 27,
+const char msg_tecka[]         PROGMEM =".";                  // msg 28,
+const char msg_zavL[]          PROGMEM ="[";                  // msg 29,
+const char msg_zavP[]          PROGMEM ="]";                  // msg 30,
+const char msg_otaznik[]       PROGMEM ="?";                  // msg 31,
+const char msg_minus[]         PROGMEM ="-";                  // msg 32,
+const char msg_lomitko[]       PROGMEM ="/";                  // msg 33,
+const char msg_ANO[]           PROGMEM ="ANO";                // msg 34, 
+const char msg_NE[]            PROGMEM ="NE";                 // msg 35,
+const char msg_po[]            PROGMEM ="Po";                 // msg 36, 
+const char msg_ut[]            PROGMEM ="Ut";                 // msg 37,
+const char msg_st[]            PROGMEM ="St";                 // msg 38,
+const char msg_ct[]            PROGMEM ="Ct";                 // msg 39,
+const char msg_pa[]            PROGMEM ="Pa";                 // msg 40,
+const char msg_so[]            PROGMEM ="So";                 // msg 41, 
+const char msg_ne[]            PROGMEM ="Ne";                 // msg 42, 
+const char msg_dnes[]          PROGMEM ="Dnes je";            // msg 43,
+const char msg_pondeli[]       PROGMEM ="pondeli";            // msg 44, 
+const char msg_utery[]         PROGMEM ="utery";              // msg 45,
+const char msg_streda[]        PROGMEM ="streda";             // msg 46, 
+const char msg_ctvrtek[]       PROGMEM ="ctvrtek";            // msg 47,
+const char msg_patek[]         PROGMEM ="patek";              // msg 48,
+const char msg_sobota[]        PROGMEM ="sobota";             // msg 49,
+const char msg_nedele[]        PROGMEM ="nedele";             // msg 50,
+const char msg_hod_min[]       PROGMEM ="hod:min";            // msg 51,
+const char msg_sec[]           PROGMEM ="sec";                // msg 52,
+const char msg_interval_A[]    PROGMEM ="5-250";              // msg 53,
+const char msg_interval_B[]    PROGMEM ="0-250";              // msg 54,
+const char msg_ulozeno[]       PROGMEM ="ULOZENO";            // msg 55, 
+const char msg_rbt[]           PROGMEM ="RESTARTUJI SE";      // msg 56,
+const char msg_run_now[]       PROGMEM ="BEZI PROGRAM...";    // msg 57,
+const char msg_rtc[]           PROGMEM ="RTC NENALEZEN!";     // msg 58, nenasel na I2C 0x68
+const char msg_rtc_run[]       PROGMEM ="CAS NENASTAVEN!";    // msg 59, vraci 165:165:165 165.165.2165
+const char msg_cerpadlo[]      PROGMEM ="CERPADLO";           // msg 60,
+const char msg_vloz[]          PROGMEM ="Vloz";               // msg 61,
+const char msg_doba[]          PROGMEM ="doba";               // msg 62,
+const char msg_chyba_dne[]     PROGMEM ="CHYBA RTC!";         // msg 63,
+const char msg_cas[]           PROGMEM ="CAS";                // msg 64,  
+const char msg_jedna[]         PROGMEM ="1";                  // msg 65,
+const char msg_dva[]           PROGMEM ="2";                  // msg 66,
+const char msg_tri[]           PROGMEM ="3";                  // msg 67,
+const char msg_last_T[]        PROGMEM ="Posledni teplota";   // msg 68,
+const char msg_last_V[]        PROGMEM ="Posledni vlhkost";   // msg 69,
+const char msg_EE_del[]        PROGMEM ="EEPROM smazana";     // msg 70,
+const char msg_menu[]          PROGMEM ="MENU";               // msg 71,
+const char msg_dwn[]           PROGMEM ="DOLU";               // msg 72,
+const char msg_up[]            PROGMEM ="NAHORU";             // msg 73,
+const char msg_left[]          PROGMEM ="VLEVO";              // msg 74,
+const char msg_right[]         PROGMEM ="VPRAVO";             // msg 75,
+const char msg_end[]           PROGMEM ="Konec";              // msg 76,
+const char msg_language[]      PROGMEM ="Jazyk";              // msg 77, 
+const char msg_czech[]         PROGMEM ="Cestina";            // msg 78,
+const char msg_english[]       PROGMEM ="Anglictina";         // msg 79,
 
 // EN messages for LCD and serial output
+// deklaration in PROGMEM
 const char msg_en_prazdno[]    PROGMEM ="                ";   // 16 znaku mezera
 const char msg_en_mezera[]     PROGMEM =" ";                  // 1 znak mezera
-const char msg_en_menu0[]      PROGMEM ="Irrigation days ";   // menu 0
-const char msg_en_menu1[]      PROGMEM ="Time program 1  ";   // menu 1
-const char msg_en_menu2[]      PROGMEM ="Run program 1   ";   // menu 2
-const char msg_en_menu3[]      PROGMEM ="Time program 2  ";   // menu 3
-const char msg_en_menu4[]      PROGMEM ="Run program 2   ";   // menu 4
-const char msg_en_menu5[]      PROGMEM ="Time program 3  ";   // menu 5
-const char msg_en_menu6[]      PROGMEM ="Run program 3   ";   // menu 6
-const char msg_en_menu7[]      PROGMEM ="Pump off for    ";   // menu 7
-const char msg_en_menu8[]      PROGMEM ="Wait off for    ";   // menu 8
-const char msg_en_menu9[]      PROGMEM ="Reg temperature ";   // menu 9
-const char msg_en_menu10[]     PROGMEM ="Reg moisture    ";   // menu 10
-const char msg_en_menu11[]     PROGMEM ="Date and time   ";   // menu 11
-const char msg_en_menu12[]     PROGMEM ="DELETE setting  ";   // menu 12
-const char msg_en_menu13[]     PROGMEM ="SAVE settings   ";   // menu 13
+const char msg_en_menu0[]      PROGMEM ="Irrigation days";    // menu 0
+const char msg_en_menu1[]      PROGMEM ="Time program 1";     // menu 1
+const char msg_en_menu2[]      PROGMEM ="Run program 1";      // menu 2
+const char msg_en_menu3[]      PROGMEM ="Time program 2";     // menu 3
+const char msg_en_menu4[]      PROGMEM ="Run program 2";      // menu 4
+const char msg_en_menu5[]      PROGMEM ="Time program 3";     // menu 5
+const char msg_en_menu6[]      PROGMEM ="Run program 3";      // menu 6
+const char msg_en_menu7[]      PROGMEM ="Pump off for";       // menu 7
+const char msg_en_menu8[]      PROGMEM ="Wait off for";       // menu 8
+const char msg_en_menu9[]      PROGMEM ="Reg temperature";    // menu 9
+const char msg_en_menu10[]     PROGMEM ="Reg moisture";       // menu 10
+const char msg_en_menu11[]     PROGMEM ="Date and time";      // menu 11
+const char msg_en_menu12[]     PROGMEM ="DELETE setting";     // menu 12
+const char msg_en_menu13[]     PROGMEM ="SAVE settings";      // menu 13
 const char msg_en_ZAPNUTO[]    PROGMEM ="is ON";              // pouzito v menu 9, 10, 12, 13
 const char msg_en_VYPNUTO[]    PROGMEM ="is OFF";             // pouzito v menu 9, 10, 12, 13
 const char msg_en_VYP[]        PROGMEM ="OFF";                // pouzito v menu 9, 10
@@ -229,8 +232,8 @@ const char msg_en_interval_B[] PROGMEM ="0-250";
 const char msg_en_ulozeno[]    PROGMEM ="SAVED";
 const char msg_en_rbt[]        PROGMEM ="RESTARTING";
 const char msg_en_run_now[]    PROGMEM ="RUN PROGRAM...";
-const char msg_en_rtc[]        PROGMEM ="RTC not find!   ";  // not find rtc on I2C 0x68 address
-const char msg_en_rtc_run[]    PROGMEM ="TIME not set!   ";  // return 165:165:165 165.165.2165
+const char msg_en_rtc[]        PROGMEM ="RTC not find!";  // not find rtc on I2C 0x68 address
+const char msg_en_rtc_run[]    PROGMEM ="TIME not set!";  // return 165:165:165 165.165.2165
 const char msg_en_cerpadlo[]   PROGMEM ="PUMP";
 const char msg_en_vloz[]       PROGMEM ="Insert";
 const char msg_en_doba[]       PROGMEM ="time";
@@ -252,6 +255,21 @@ const char msg_en_language[]   PROGMEM ="Language";
 const char msg_en_czech[]      PROGMEM ="Czech";
 const char msg_en_english[]    PROGMEM ="English";
 
+const char* const text_table[] PROGMEM = { // textova tabulka s CZ texty
+  msg_prazdno, msg_mezera, msg_menu0, msg_menu1, msg_menu2, msg_menu3, msg_menu4, msg_menu5, msg_menu6, msg_menu7, msg_menu8, msg_menu9, msg_menu10, msg_menu11, msg_menu12, msg_menu13,
+  msg_ZAPNUTO, msg_VYPNUTO, msg_VYP, msg_ZAP, msg_dvojtecka, msg_rovnase, msg_procenta, msg_volt, msg_Hz, msg_kHz, msg_err_cidla, msg_AD_range, msg_tecka, msg_zavL, msg_zavP, msg_otaznik,
+  msg_minus, msg_lomitko, msg_ANO, msg_NE, msg_po, msg_ut, msg_st, msg_ct, msg_pa, msg_so, msg_ne, msg_dnes, msg_pondeli, msg_utery, msg_streda, msg_ctvrtek, msg_patek, msg_sobota, msg_nedele, 
+  msg_hod_min, msg_sec, msg_interval_A, msg_interval_B, msg_ulozeno, msg_rbt, msg_run_now, msg_rtc, msg_rtc_run, msg_cerpadlo, msg_vloz, msg_doba, msg_chyba_dne, msg_cas, msg_jedna, msg_dva, 
+  msg_tri, msg_last_T, msg_last_V, msg_EE_del, msg_menu, msg_dwn, msg_up, msg_left, msg_right, msg_end, msg_language, msg_czech, msg_english                            
+};
+
+const char* const text_table_en[] PROGMEM = { // textova tabulka s EN texty
+  msg_en_prazdno, msg_en_mezera, msg_en_menu0, msg_en_menu1, msg_en_menu2, msg_en_menu3, msg_en_menu4, msg_en_menu5, msg_en_menu6, msg_en_menu7, msg_en_menu8, msg_en_menu9, msg_en_menu10, msg_en_menu11, msg_en_menu12, msg_en_menu13,
+  msg_en_ZAPNUTO, msg_en_VYPNUTO, msg_en_VYP, msg_en_ZAP, msg_en_dvojtecka, msg_en_rovnase, msg_en_procenta, msg_en_volt, msg_en_Hz, msg_en_kHz, msg_en_err_cidla, msg_en_AD_range, msg_en_tecka, msg_en_zavL, msg_en_zavP, msg_en_otaznik,
+  msg_en_minus, msg_en_lomitko, msg_en_ANO, msg_en_NE, msg_en_po, msg_en_ut, msg_en_st, msg_en_ct, msg_en_pa, msg_en_so, msg_en_ne, msg_en_dnes, msg_en_pondeli, msg_en_utery, msg_en_streda, msg_en_ctvrtek, msg_en_patek, msg_en_sobota, msg_en_nedele, 
+  msg_en_hod_min, msg_en_sec, msg_en_interval_A, msg_en_interval_B, msg_en_ulozeno, msg_en_rbt, msg_en_run_now, msg_en_rtc, msg_en_rtc_run, msg_en_cerpadlo, msg_en_vloz, msg_en_doba, msg_en_chyba_dne, msg_en_cas, msg_en_jedna, msg_en_dva, 
+  msg_en_tri, msg_en_last_T, msg_en_last_V, msg_en_EE_del, msg_en_menu, msg_en_dwn, msg_en_up, msg_en_left, msg_en_right, msg_en_end, msg_en_language, msg_en_czech, msg_en_english
+};
 
 #ifdef USE_FREQ_PROBE
    float frq;       // hodnota frekvence z čidla
@@ -547,7 +565,7 @@ void loop() {
 
 void ZavlahaCas(byte pgm){ // je
 #ifdef DEBUG
-   Serial.print(msg_cas);Serial.print(msg_mezera);Serial.print(pgm);Serial.print(msg_mezera);
+   Serial.print(msg_cas);Serial.print(text_progmem(1));Serial.print(pgm);Serial.print(text_progmem(1));
 #endif
    if(pgm==1) {trvani_doby = doba1; CAS1 = true;} // prave je cas 1
    else if(pgm==2) {trvani_doby = doba2; CAS2 = true;} // prave je cas 2
@@ -557,7 +575,7 @@ void ZavlahaCas(byte pgm){ // je
    interval = 0;                    // interval cyklovani cerpadla
    predchoziCasDoba = millis();     // interval doby zalevani 
 #ifdef DEBUG
-   Serial.print(msg_doba);Serial.print(msg_mezera);Serial.print(trvani_doby);Serial.print(msg_mezera);Serial.println(msg_sec);
+   Serial.print(msg_doba);Serial.print(text_progmem(1));Serial.print(trvani_doby);Serial.print(text_progmem(1));Serial.println(msg_sec);
 #endif      
 } // end void
 
@@ -577,17 +595,17 @@ void casovacLCD(){         // posouva pomalu text na lcd
           LCDMillis = millis();
           lcd.setCursor(0,0);
           lcd.print(msg_cerpadlo);
-          lcd.print(msg_mezera);
+          lcd.print(text_progmem(1));
           if(cerpadlo_vystup_stav) {
-            lcd.print(msg_VYP); lcd.print(msg_prazdno);lcd.setCursor(0,1);lcd.print(msg_doba);lcd.print(msg_mezera);
+            lcd.print(msg_VYP); lcd.print(text_progmem(0));lcd.setCursor(0,1);lcd.print(msg_doba);lcd.print(text_progmem(1));
             }
           else{
-            lcd.print(msg_ZAP); lcd.print(msg_prazdno);lcd.setCursor(0,1);lcd.print(msg_doba);lcd.print(msg_mezera);
+            lcd.print(msg_ZAP); lcd.print(text_progmem(0));lcd.setCursor(0,1);lcd.print(msg_doba);lcd.print(text_progmem(1));
             }
           odpocet_cerpadlo = ((predchoziCasCerpadlo+interval)-aktualniCasCerpadlo)/1000; // cas v sec misto ms
           // zobrazi na LCD cas v sec zap nebo vyp a celkovy cas programu (pr: 5/254sec)
           lcd.print(odpocet_cerpadlo);lcd.print(msg_lomitko);lcd.print(aktualniCasDoba/1000-predchoziCasDoba/1000);lcd.print(msg_sec); 
-          lcd.print(msg_prazdno);
+          lcd.print(text_progmem(0));
         }//end millis
     }//end makej
   }//end if
@@ -736,23 +754,23 @@ void init_read(){ // nacteni z eeprom po zapnuti zarizeni
 void ee_read(){ // vypise eeprom hodnoty
    init_read(); // nacte ee
 #ifdef DEBUG
-   Serial.print(msg_cas);Serial.print(msg_jedna);Serial.print(msg_mezera);Serial.print(cas1_hod);Serial.print(msg_dvojtecka);Serial.print(cas1_min);Serial.print(F("-"));Serial.println(doba1);
-   Serial.print(msg_cas);Serial.print(msg_dva);Serial.print(msg_mezera);Serial.print(cas2_hod);Serial.print(msg_dvojtecka);Serial.print(cas2_min);Serial.print(F("-"));Serial.println(doba2);
-   Serial.print(msg_cas);Serial.print(msg_tri);Serial.print(msg_mezera);Serial.print(cas3_hod);Serial.print(msg_dvojtecka);Serial.print(cas3_min);Serial.print(F("-"));Serial.println(doba3);
-   Serial.print(msg_cerpadlo);Serial.print(msg_mezera);Serial.print(msg_ZAP);Serial.print(msg_mezera);Serial.println(cerpadlo_on);
-   Serial.print(msg_cerpadlo);Serial.print(msg_mezera);Serial.print(msg_VYP);Serial.print(msg_mezera);Serial.println(pauza_cerpadlo_off);
-   Serial.print(msg_menu9);Serial.print(msg_mezera);Serial.println(use_teplota);
-   Serial.print(msg_last_T);Serial.print(msg_mezera);Serial.println(last_teplota);
-   Serial.print(msg_menu10);Serial.print(msg_mezera);Serial.println(use_vlhkost);
-   Serial.print(msg_last_V);Serial.print(msg_mezera);Serial.println(last_vlhkost);
-   Serial.print(msg_po);Serial.print(msg_mezera);Serial.println(day_po);
-   Serial.print(msg_ut);Serial.print(msg_mezera);Serial.println(day_ut);
-   Serial.print(msg_st);Serial.print(msg_mezera);Serial.println(day_st);
-   Serial.print(msg_ct);Serial.print(msg_mezera);Serial.println(day_ct);
-   Serial.print(msg_pa);Serial.print(msg_mezera);Serial.println(day_pa);
-   Serial.print(msg_so);Serial.print(msg_mezera);Serial.println(day_so);
-   Serial.print(msg_ne);Serial.print(msg_mezera);Serial.println(day_ne);
-   Serial.print(msg_language);Serial.print(msg_mezera);Serial.print(language);Serial.print(msg_mezera);if(language==0)Serial.println(msg_czech);if(language==1)Serial.println(msg_english); 
+   Serial.print(msg_cas);Serial.print(msg_jedna);Serial.print(text_progmem(1));Serial.print(cas1_hod);Serial.print(msg_dvojtecka);Serial.print(cas1_min);Serial.print(F("-"));Serial.println(doba1);
+   Serial.print(msg_cas);Serial.print(msg_dva);Serial.print(text_progmem(1));Serial.print(cas2_hod);Serial.print(msg_dvojtecka);Serial.print(cas2_min);Serial.print(F("-"));Serial.println(doba2);
+   Serial.print(msg_cas);Serial.print(msg_tri);Serial.print(text_progmem(1));Serial.print(cas3_hod);Serial.print(msg_dvojtecka);Serial.print(cas3_min);Serial.print(F("-"));Serial.println(doba3);
+   Serial.print(msg_cerpadlo);Serial.print(text_progmem(1));Serial.print(msg_ZAP);Serial.print(text_progmem(1));Serial.println(cerpadlo_on);
+   Serial.print(msg_cerpadlo);Serial.print(text_progmem(1));Serial.print(msg_VYP);Serial.print(text_progmem(1));Serial.println(pauza_cerpadlo_off);
+   Serial.print(msg_menu9);Serial.print(text_progmem(1));Serial.println(use_teplota);
+   Serial.print(msg_last_T);Serial.print(text_progmem(1));Serial.println(last_teplota);
+   Serial.print(msg_menu10);Serial.print(text_progmem(1));Serial.println(use_vlhkost);
+   Serial.print(msg_last_V);Serial.print(text_progmem(1));Serial.println(last_vlhkost);
+   Serial.print(msg_po);Serial.print(text_progmem(1));Serial.println(day_po);
+   Serial.print(msg_ut);Serial.print(text_progmem(1));Serial.println(day_ut);
+   Serial.print(msg_st);Serial.print(text_progmem(1));Serial.println(day_st);
+   Serial.print(msg_ct);Serial.print(text_progmem(1));Serial.println(day_ct);
+   Serial.print(msg_pa);Serial.print(text_progmem(1));Serial.println(day_pa);
+   Serial.print(msg_so);Serial.print(text_progmem(1));Serial.println(day_so);
+   Serial.print(msg_ne);Serial.print(text_progmem(1));Serial.println(day_ne);
+   Serial.print(msg_language);Serial.print(text_progmem(1));Serial.print(language);Serial.print(text_progmem(1));if(language==0)Serial.println(msg_czech);if(language==1)Serial.println(msg_english); 
 #endif
 } // end void
 
@@ -794,9 +812,9 @@ void save_eeprom() { // ulozi z lcd menu hodnoty
   lcd.noBlink(); // prestaneme blikat kurzorem
   lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
   lcd.print(msg_ulozeno);
-  lcd.print(msg_prazdno);
+  lcd.print(text_progmem(0));
   lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
-  lcd.print(msg_prazdno);
+  lcd.print(text_progmem(0));
   delay(2000); // pockame na lcd text
   RTC_a_restart(); // pomocne funkce
 } // end void
@@ -996,8 +1014,8 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
   switch(krok){
     case 0: // menu 0
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-      lcd.print(msg_menu0);
-      lcd.setCursor(14,1); lcd.print(msg_mezera);lcd.print(msg_otaznik);
+      lcd.print(text_progmem(2));
+      lcd.setCursor(14,1); lcd.print(text_progmem(1));lcd.print(msg_otaznik);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       if(day_po==2)lcd.print(msg_po); else {lcd.print(msg_minus);lcd.print(msg_minus);}
       lcd.setCursor(2,1);
@@ -1023,14 +1041,14 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
       break;
     case 1: // menu 1
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
-      lcd.print(msg_menu1);
+      lcd.print(text_progmem(3));
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       print_digits_lcd(cas1_hod);
       lcd.print(msg_dvojtecka);
       print_digits_lcd(cas1_min);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.print(msg_hod_min);
-      lcd.print(msg_prazdno);
+      lcd.print(text_progmem(0));
       menu_state = 1;
       if (LR_menu==0) {lcd.setCursor(1,1); lcd.blink();} // zacne blikat kurzor hod
       if (LR_menu==1) {lcd.setCursor(4,1); lcd.blink();} // zacne blikat kurzor min
@@ -1040,13 +1058,13 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
       lcd.print(msg_menu2);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       print_digits_lcd(doba1);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.print(msg_zavL);
       lcd.print(msg_interval_A);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.print(msg_sec);
       lcd.print(msg_zavP);
-      lcd.print(msg_prazdno);
+      lcd.print(text_progmem(0));
       menu_state = 2;
       lcd.setCursor(1,1); lcd.blink();
       break;
@@ -1057,9 +1075,9 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
       print_digits_lcd(cas2_hod);
       lcd.print(msg_dvojtecka);
       print_digits_lcd(cas2_min);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.print(msg_hod_min);
-      lcd.print(msg_prazdno);
+      lcd.print(text_progmem(0));
       menu_state = 3;
       if (LR_menu==0) {lcd.setCursor(1,1); lcd.blink();} // zacne blikat kurzor hod
       if (LR_menu==1) {lcd.setCursor(4,1); lcd.blink();} // zacne blikat kurzor min
@@ -1069,13 +1087,13 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
       lcd.print(msg_menu4);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       print_digits_lcd(doba2);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.print(msg_zavL);
       lcd.print(msg_interval_A);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.print(msg_sec);
       lcd.print(msg_zavP);
-      lcd.print(msg_prazdno);
+      lcd.print(text_progmem(0));
       menu_state = 4;
       lcd.setCursor(1,1); lcd.blink();
       break;
@@ -1086,9 +1104,9 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
       print_digits_lcd(cas3_hod);
       lcd.print(msg_dvojtecka);
       print_digits_lcd(cas3_min);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.print(msg_hod_min);
-      lcd.print(msg_prazdno);
+      lcd.print(text_progmem(0));
       menu_state = 5;
       if (LR_menu==0) {lcd.setCursor(1,1); lcd.blink();} // zacne blikat kurzor hod
       if (LR_menu==1) {lcd.setCursor(4,1); lcd.blink();} // zacne blikat kurzor min
@@ -1098,13 +1116,13 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
       lcd.print(msg_menu6);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       print_digits_lcd(doba3);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.print(msg_zavL);
       lcd.print(msg_interval_A);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.print(msg_sec);
       lcd.print(msg_zavP);
-      lcd.print(msg_prazdno);
+      lcd.print(text_progmem(0));
       menu_state = 6;
       lcd.setCursor(1,1); lcd.blink();
       break;
@@ -1113,13 +1131,13 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
       lcd.print(msg_menu7);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       print_digits_lcd(cerpadlo_on);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.print(msg_zavL);
       lcd.print(msg_interval_B);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.print(msg_sec);
       lcd.print(msg_zavP);
-      lcd.print(msg_prazdno);
+      lcd.print(text_progmem(0));
       menu_state = 7;
       lcd.setCursor(1,1); lcd.blink();
       break;
@@ -1128,13 +1146,13 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
       lcd.print(msg_menu8);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       lcd.print(pauza_cerpadlo_off);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.print(msg_zavL);
       lcd.print(msg_interval_B);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.print(msg_sec);
       lcd.print(msg_zavP);
-      lcd.print(msg_prazdno);
+      lcd.print(text_progmem(0));
       menu_state = 8;
       lcd.setCursor(0,1); lcd.blink();
       break;
@@ -1144,7 +1162,7 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       if (use_teplota==2){
         lcd.print(msg_ZAPNUTO);
-        lcd.print(msg_mezera);
+        lcd.print(text_progmem(1));
         lcd.print(msg_zavL);
         lcd.write((byte)2);          // symbol sipka
         lcd.print(msg_rovnase);
@@ -1153,7 +1171,7 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
         }
         else {
         lcd.print(msg_VYPNUTO);
-        lcd.print(msg_mezera);
+        lcd.print(text_progmem(1));
         lcd.print(msg_zavL);
         lcd.write((byte)1);          // symbol sipka
         lcd.print(msg_rovnase);
@@ -1169,7 +1187,7 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       if (use_vlhkost==2){
         lcd.print(msg_ZAPNUTO);
-        lcd.print(msg_mezera);
+        lcd.print(text_progmem(1));
         lcd.print(msg_zavL);
         lcd.write((byte)2);          // symbol sipka
         lcd.print(msg_rovnase);
@@ -1178,7 +1196,7 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
         }
         else {
         lcd.print(msg_VYPNUTO);
-        lcd.print(msg_mezera);
+        lcd.print(text_progmem(1));
         lcd.print(msg_zavL);
         lcd.write((byte)1);          // symbol sipka
         lcd.print(msg_rovnase);
@@ -1192,23 +1210,23 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
       lcd.setCursor(0,0);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 1 radek
       lcd.print(msg_menu11);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
-      lcd.print(msg_prazdno);
+      lcd.print(text_progmem(0));
       lcd.setCursor(0,1);
       print_digits_lcd(den);
       lcd.setCursor(2,1);
       lcd.print(msg_tecka);
       print_digits_lcd(mesic);
-      lcd.print(msg_prazdno);
+      lcd.print(text_progmem(0));
       lcd.setCursor(5,1);
       lcd.print(msg_tecka);
       print_digits_lcd(rok);
-      lcd.print(msg_prazdno);
+      lcd.print(text_progmem(0));
       lcd.setCursor(11,1);
       print_digits_lcd(hodina);
       lcd.setCursor(13,1);
       lcd.print(msg_dvojtecka);
       print_digits_lcd(minuta);
-      lcd.print(msg_prazdno);
+      lcd.print(text_progmem(0));
       menu_state = 11;
       vterina = 0;
       if (LR_menu==0) {lcd.setCursor(1,1); lcd.blink();} // zacne blikat kurzor den
@@ -1222,17 +1240,17 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
       lcd.print(msg_menu12);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       lcd.print(msg_otaznik);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.print(msg_zavL);
       lcd.write((byte) 2); // symbol sipka
       lcd.print(msg_rovnase);
       lcd.print(msg_ANO);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.write((byte) 1); // symbol sipka
       lcd.print(msg_rovnase);
       lcd.print(msg_NE);
       lcd.print(msg_zavP);
-      lcd.print(msg_prazdno);
+      lcd.print(text_progmem(0));
       menu_state = 12;
       lcd.setCursor(0,1); lcd.blink();
       break;
@@ -1241,17 +1259,17 @@ void lcd_menu(byte krok) {// Rutina tiskne texty menu na LCD)
       lcd.print(msg_menu13);
       lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
       lcd.print(msg_otaznik);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.print(msg_zavL);
       lcd.write((byte) 2); // symbol sipka
       lcd.print(msg_rovnase);
       lcd.print(msg_ANO);
-      lcd.print(msg_mezera);
+      lcd.print(text_progmem(1));
       lcd.write((byte) 1); // symbol sipka
       lcd.print(msg_rovnase);
       lcd.print(msg_NE);
       lcd.print(msg_zavP);
-      lcd.print(msg_prazdno);
+      lcd.print(text_progmem(0));
       menu_state = 13;
       lcd.setCursor(0,1); lcd.blink();
       break;
@@ -1276,25 +1294,25 @@ void vypisuj_info_lcd(){ // informace na lcd
                lcd.print(celsius,1);
                lcd.write((byte) 0); // nulty symbol v pameti lcd - krouzek C
                lcd.print(F("C"));
-               lcd.print(msg_prazdno);
+               lcd.print(text_progmem(0));
              }//end if
              else {
-              lcd.print(msg_err_cidla);lcd.print(msg_otaznik);lcd.print(msg_prazdno);
+              lcd.print(msg_err_cidla);lcd.print(msg_otaznik);lcd.print(text_progmem(0));
               }
            break;
          case 1:
            // vlhkost
            lcd.setCursor(0,1);
            #ifdef USE_FREQ_PROBE
-              if(frq==0) {lcd.print(msg_err_cidla);lcd.print(msg_otaznik);lcd.print(msg_prazdno);}
-              else {lcd.print(vlhkost);lcd.print(msg_procenta);lcd.print(msg_mezera);}
-              if(frq<1000 && frq>0)  {lcd.print(frq);lcd.print(msg_mezera);lcd.print(msg_Hz);lcd.print(msg_prazdno);}
-              else{lcd.print(frq/1000); lcd.print(msg_mezera);lcd.print(msg_kHz);lcd.print(msg_prazdno);}
+              if(frq==0) {lcd.print(msg_err_cidla);lcd.print(msg_otaznik);lcd.print(text_progmem(0));}
+              else {lcd.print(vlhkost);lcd.print(msg_procenta);lcd.print(text_progmem(1));}
+              if(frq<1000 && frq>0)  {lcd.print(frq);lcd.print(text_progmem(1));lcd.print(msg_Hz);lcd.print(text_progmem(0));}
+              else{lcd.print(frq/1000); lcd.print(text_progmem(1));lcd.print(msg_kHz);lcd.print(text_progmem(0));}
               lcd.setCursor(0,0);
            #endif   
            #ifdef USE_AD_PROBE
-              lcd.print(vlhkost);lcd.print(msg_procenta);lcd.print(msg_mezera);
-              lcd.print(AD_volt);lcd.print(msg_volt);lcd.print(msg_prazdno);
+              lcd.print(vlhkost);lcd.print(msg_procenta);lcd.print(text_progmem(1));
+              lcd.print(AD_volt);lcd.print(msg_volt);lcd.print(text_progmem(0));
            #endif 
            tisk_casu();
            break;
@@ -1306,50 +1324,50 @@ void vypisuj_info_lcd(){ // informace na lcd
            switch(weekday()){ // weekday() vraci 1-7 dle dne v tydnu
              case 1:
                lcd.print(msg_dnes); // dnes je
-               lcd.print(msg_mezera);
+               lcd.print(text_progmem(1));
                lcd.print(msg_nedele);
              break;
              case 2:
                lcd.print(msg_dnes); // dnes je
-               lcd.print(msg_mezera);
+               lcd.print(text_progmem(1));
                lcd.print(msg_pondeli);
              break;
              case 3:
                lcd.print(msg_dnes); // dnes je
-               lcd.print(msg_mezera);
+               lcd.print(text_progmem(1));
                lcd.print(msg_utery);
              break;
              case 4:
                lcd.print(msg_dnes); // dnes je
-               lcd.print(msg_mezera);
+               lcd.print(text_progmem(1));
                lcd.print(msg_streda);
              break;
              case 5:
                lcd.print(msg_dnes); // dnes je
-               lcd.print(msg_mezera);
+               lcd.print(text_progmem(1));
                lcd.print(msg_ctvrtek);
              break;
              case 6:
                lcd.print(msg_dnes); // dnes je
-               lcd.print(msg_mezera);
+               lcd.print(text_progmem(1));
                lcd.print(msg_patek);
              break;
              case 7:
                lcd.print(msg_dnes); // dnes je
-               lcd.print(msg_mezera);
+               lcd.print(text_progmem(1));
                lcd.print(msg_sobota);
              break;
              default:
                lcd.print(msg_chyba_dne);
              break;
            }//end switch
-           lcd.print(msg_prazdno);
+           lcd.print(text_progmem(0));
            break;
          case 3:
            lcd.setCursor(0,0);
-           lcd.print(msg_menu0); // zavlaha bude
-           lcd.print(msg_prazdno);
-           lcd.setCursor(14,1); lcd.print(msg_prazdno);
+           lcd.print(text_progmem(2)); // zavlaha bude
+           lcd.print(text_progmem(0));
+           lcd.setCursor(14,1); lcd.print(text_progmem(0));
            lcd.setCursor(0,1);             // Nastaveni kurzoru LCD na pozici 0 sloupec, 2 radek
            if(day_po==2)lcd.print(msg_po); else {lcd.print(msg_minus);lcd.print(msg_minus);}
            lcd.setCursor(2,1);
@@ -1364,7 +1382,7 @@ void vypisuj_info_lcd(){ // informace na lcd
            if(day_so==2)lcd.print(msg_so); else {lcd.print(msg_minus);lcd.print(msg_minus);}
            lcd.setCursor(12,1);
            if(day_ne==2)lcd.print(msg_ne); else {lcd.print(msg_minus);lcd.print(msg_minus);}
-           lcd.print(msg_prazdno);
+           lcd.print(text_progmem(0));
            posun_lcd=-1; // vynulujeme posun na zacatek
            break;
          } // end switch
@@ -1444,13 +1462,13 @@ void tisk_casu(){ // tiskne na prvni radek datum a cas
   print_digits_lcd(month());
   lcd.print(msg_tecka);
   lcd.print(year());
-  lcd.print(msg_mezera);
-  lcd.print(msg_mezera);
+  lcd.print(text_progmem(1));
+  lcd.print(text_progmem(1));
   lcd.setCursor(11,0);
   print_digits_lcd(hour());
   lcd.print(msg_dvojtecka);
   print_digits_lcd(minute());
-  lcd.print(msg_mezera);
+  lcd.print(text_progmem(1));
 } // end void
 
 void serial_clock_display(){ // tisk aktualniho systemoveho casu na serial
@@ -1460,7 +1478,7 @@ void serial_clock_display(){ // tisk aktualniho systemoveho casu na serial
   print_digits(minute());
   Serial.print(msg_dvojtecka);
   print_digits(second());
-  Serial.print(msg_mezera);
+  Serial.print(text_progmem(1));
   print_digits(day());
   Serial.print(msg_tecka);
   print_digits(month());
@@ -1491,9 +1509,9 @@ void RTC_a_restart(){ // ulozi do rtc a udela restart
 #endif
    lcd.home();
    lcd.print(msg_rbt);
-   lcd.print(msg_prazdno);
+   lcd.print(text_progmem(0));
    lcd.setCursor(0,1);
-   lcd.print(msg_prazdno);
+   lcd.print(text_progmem(0));
    setTime(hodina,minuta,vterina,den,mesic,rok); // nastavime system cas
    RTC.set(now());                               // ulozime system cas do RTC
    while(1); // pockame na watchdog az to sestreli
@@ -1513,7 +1531,7 @@ void cerpadlo(){ // rutina spinani cerpadla cas on a cas off
          interval = pauza_cerpadlo_off*1000;      // off time cerpadla
          } // end else
 #ifdef DEBUG
-     Serial.print(msg_cerpadlo);Serial.print(msg_mezera);
+     Serial.print(msg_cerpadlo);Serial.print(text_progmem(1));
      Serial.println(cerpadlo_vystup_stav);
 #endif
      cerpadlo_vystup_stav = !(cerpadlo_vystup_stav);
@@ -1722,7 +1740,7 @@ void cti_serial(){
           if (znak == 'G') {  // vypsat frekvenci a vlhkost
             Mereni();
             Serial.print(frq);
-            Serial.print(msg_mezera);
+            Serial.print(text_progmem(1));
             Serial.println(vlhkost);
           } // end if
       #endif    
@@ -1732,10 +1750,10 @@ void cti_serial(){
             Serial.print(msg_zavL);
             Serial.print(msg_AD_range);
             Serial.print(msg_zavP);
-            Serial.print(msg_mezera);
+            Serial.print(text_progmem(1));
             Serial.print(AD_volt);
             Serial.print(msg_volt);
-            Serial.print(msg_mezera);
+            Serial.print(text_progmem(1));
             Serial.print(vlhkost);
             Serial.println(msg_procenta);            
           } // end if
@@ -1801,4 +1819,14 @@ int freeRam() { // vraci velikost volne RAM
   extern int __heap_start, *__brkval;
   int v;
   return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+}
+
+// funkce pro cteni textu PROGMEM z pameti FLASH
+// test Serial.println(text_progmem(i));
+String text_progmem(byte pole) { // ziskani textu z FLASH pameti pro zobrazeni
+  char charText[17]; // POZOR - toto pole musí mít velikost jako nejvetsi pole PROGMEM +1
+  if(language==0) strcpy_P(charText, (char*) pgm_read_word (&text_table [pole]));
+  if(language==1) strcpy_P(charText, (char*) pgm_read_word (&text_table_en [pole]));
+  // todo if(language==2) strcpy_P(charText, (char*) pgm_read_word (&text_table_xx [pole]));
+  return (String)charText;
 }
