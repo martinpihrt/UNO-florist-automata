@@ -59,7 +59,7 @@ V grafu je vidět spínání výstupu (zap/vyp cyklování) s ohledem na vlhkost
 <a href="photos\fw1.00\prubeh_menu_vystup.png"><img src="photos\fw1.00\prubeh_menu_vystup.png" width="50%"></a> 
 
 ## Nastavení datumu a času
-Zleva nastavujeme den, měsíc, rok, hodina a minuta. Vteřina se při uložení nastaví na "0". Čas je ukládán do obvodu RTC DS1307.
+Zleva nastavujeme den, měsíc, rok, hodina a minuta. Vteřina se při uložení nastaví na "0". Čas je ukládán do obvodu RTC DS1307.<br>
 <a href="photos\fw1.00\foto (18).png"><img src="photos\fw1.00\foto (18).png" width="50%"></a>
 
 ## Smazání do továrního nastavení
@@ -79,7 +79,7 @@ Pokud chceme zařízení vymazat do továrního nastavení stiskneme v menu jako
 * zavlažovat ve dnech po-ne<br>
 
 ## Uložit nastavení
-Všechny parametry se ukládají do trvalé paměti EEPROM.
+Všechny parametry se ukládají do trvalé paměti EEPROM.<br>
 <a href="photos\fw1.00\foto (20).png"><img src="photos\fw1.00\foto (20).png" width="50%"></a>
 <a href="photos\fw1.00\foto (21).png"><img src="photos\fw1.00\foto (21).png" width="50%"></a>
 <a href="photos\fw1.00\foto (22).png"><img src="photos\fw1.00\foto (22).png" width="50%"></a>
